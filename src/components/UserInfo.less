@@ -1,0 +1,159 @@
+.user-info {
+  padding: 20px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  margin: 20px;
+}
+
+.not-login {
+  text-align: center;
+  color: #666;
+  font-size: 16px;
+  margin-bottom: 20px;
+  display: block;
+}
+
+.login-btn {
+  background: #007aff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-size: 16px;
+  width: 100%;
+}
+
+.user-header {
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.username {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.email {
+  font-size: 14px;
+  color: #666;
+  display: block;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 16px;
+  display: block;
+}
+
+.user-stats {
+  margin-bottom: 24px;
+}
+
+.stats-grid {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.stat-item {
+  flex: 1;
+  text-align: center;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: bold;
+  color: #007aff;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: #666;
+  display: block;
+}
+
+.last-generation {
+  font-size: 12px;
+  color: #999;
+  display: block;
+  text-align: center;
+}
+
+.user-quota {
+  margin-bottom: 24px;
+}
+
+.quota-bar {
+  height: 8px;
+  background: #f0f0f0;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.quota-used {
+  height: 100%;
+  background: linear-gradient(90deg, #007aff, #5ac8fa);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.quota-text {
+  font-size: 14px;
+  color: #666;
+  text-align: center;
+  display: block;
+}
+
+.user-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.refresh-btn, .logout-btn {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.refresh-btn {
+  background: #f8f9fa;
+  color: #333;
+  border: 1px solid #e0e0e0;
+}
+
+.logout-btn {
+  background: #ff3b30;
+  color: white;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .user-info {
+    margin: 10px;
+    padding: 16px;
+  }
+  
+  .stats-grid {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .user-actions {
+    flex-direction: column;
+  }
+}
