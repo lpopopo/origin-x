@@ -1,1 +1,113 @@
+.index {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding-bottom: 15vh;
+}
 
+.hero-section {
+  text-align: center;
+  padding: 8vh 4vw;
+  color: white;
+}
+
+.hero-title {
+  display: block;
+  font-size: 7vw;
+  font-weight: bold;
+  margin-bottom: 2vh;
+  text-shadow: 0 0.2vw 0.4vw rgba(0, 0, 0, 0.3);
+}
+
+.hero-subtitle {
+  display: block;
+  font-size: 4vw;
+  margin-bottom: 4vh;
+  opacity: 0.9;
+}
+
+.welcome-text {
+  display: block;
+  font-size: 3.5vw;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 2vh 4vw;
+  border-radius: 3vw;
+  backdrop-filter: blur(1vw);
+}
+
+.features-section {
+  padding: 4vh 4vw;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 3vw;
+}
+
+.feature-card {
+  background: white;
+  padding: 4vh 3vw;
+  border-radius: 2vw;
+  text-align: center;
+  box-shadow: 0 0.5vw 2vw rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-1vh);
+}
+
+.feature-icon {
+  font-size: 8vw;
+  margin-bottom: 2vh;
+}
+
+.feature-title {
+  display: block;
+  font-size: 4vw;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 1vh;
+}
+
+.feature-desc {
+  display: block;
+  font-size: 3vw;
+  color: #666;
+  line-height: 1.4;
+}
+
+.quick-actions {
+  padding: 6vh 4vw;
+  display: flex;
+  gap: 3vw;
+}
+
+.action-button {
+  flex: 1;
+  padding: 3vh 0;
+  border: none;
+  border-radius: 2vw;
+  font-size: 4vw;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.action-button.primary {
+  background: #667eea;
+  color: white;
+}
+
+.action-button.primary:hover {
+  background: #5a6fd8;
+  transform: translateY(-0.2vh);
+}
+
+.action-button.secondary {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 0.1vw solid rgba(255, 255, 255, 0.3);
+}
+
+.action-button.secondary:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-0.2vh);
+}

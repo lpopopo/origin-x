@@ -36,6 +36,7 @@ export interface UserQuota {
 export interface UserProfile {
   userId: string;
   email: string;
+  avatar: string;
   username: string;
   isActive: boolean;
   isVerified: boolean;
