@@ -72,9 +72,10 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 // 用户提供者组件
 interface UserProviderProps {
     children: ReactNode;
+    requireAuth?: boolean; // 是否需要校验登录，默认为true
 }
 
-export function UserProvider({ children }: UserProviderProps) {
+export function UserProvider({ children, requireAuth = true }: UserProviderProps) {
     const [state, dispatch] = useReducer(userReducer, initialState);
 
     // 获取用户信息
@@ -108,6 +109,11 @@ export function UserProvider({ children }: UserProviderProps) {
 
     // 检查认证状态并自动跳转
     const checkAuthAndRedirect = async () => {
+        // 如果不需要校验登录，直接返回
+        if (!requireAuth) {
+            return;
+        }
+
         try {
             await fetchUserProfile();
         } catch (error) {
@@ -128,7 +134,7 @@ export function UserProvider({ children }: UserProviderProps) {
     // 应用启动时检查用户状态
     useEffect(() => {
         checkAuthAndRedirect();
-    }, []);
+    }, [requireAuth]); // 添加requireAuth作为依赖
 
     const value: UserContextType = {
         state,
