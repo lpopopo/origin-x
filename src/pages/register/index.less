@@ -6,42 +6,70 @@
   justify-content: center;
   align-items: center;
   background-color: #f5f5f5;
-  padding: 20px;
+  padding: 1.25vw;
+  
+  @media screen and (max-width: 768px) {
+    padding: 4vw;
+  }
 }
 
 .register-box {
   width: 100%;
-  max-width: 400px;
+  max-width: 25vw;
   background-color: #fff;
-  border-radius: 8px;
-  padding: 30px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 0.5vw;
+  padding: 1.875vw;
+  box-shadow: 0 0.125vw 0.75vw rgba(0, 0, 0, 0.1);
 
   @media screen and (max-width: 768px) {
-    max-width: 100%;
-    padding: 20px;
+    max-width: 92vw;
+    padding: 6vw;
+    border-radius: 2vw;
+  }
+  
+  @media screen and (min-width: 1200px) {
+    max-width: 400px;
+    padding: 30px;
   }
 }
 
 .register-title {
-  font-size: 24px;
+  font-size: 1.5vw;
   font-weight: bold;
   text-align: center;
-  margin-bottom: 30px;
+  margin-bottom: 1.875vw;
   color: #333;
+  
+  @media screen and (max-width: 768px) {
+    font-size: 6vw;
+    margin-bottom: 6vw;
+  }
+  
+  @media screen and (min-width: 1200px) {
+    font-size: 24px;
+    margin-bottom: 30px;
+  }
 }
 
 .form-item {
-  margin-bottom: 20px;
+  margin-bottom: 1.25vw;
+  
+  @media screen and (max-width: 768px) {
+    margin-bottom: 4vw;
+  }
+  
+  @media screen and (min-width: 1200px) {
+    margin-bottom: 20px;
+  }
 }
 
 .input {
   width: 100%;
-  height: 40px;
-  border: 1px solid #dcdfe6;
-  border-radius: 4px;
-  padding: 0 15px;
-  font-size: 14px;
+  height: 2.5vw;
+  border: 0.0625vw solid #dcdfe6;
+  border-radius: 0.25vw;
+  padding: 0 0.9375vw;
+  font-size: 0.875vw;
   transition: all 0.3s;
 
   &:focus {
@@ -52,23 +80,49 @@
   .weui-input {
     height: 100%;
   }
+  
+  @media screen and (max-width: 768px) {
+    height: 12vw;
+    border: 0.5vw solid #dcdfe6;
+    border-radius: 2vw;
+    padding: 0 4vw;
+    font-size: 4vw;
+  }
+  
+  @media screen and (min-width: 1200px) {
+    height: 40px;
+    border: 1px solid #dcdfe6;
+    border-radius: 4px;
+    padding: 0 15px;
+    font-size: 14px;
+  }
 }
 
 .error-text {
   color: #f56c6c;
-  font-size: 12px;
-  margin-bottom: 15px;
+  font-size: 0.75vw;
+  margin-bottom: 0.9375vw;
   display: block;
+  
+  @media screen and (max-width: 768px) {
+    font-size: 3.5vw;
+    margin-bottom: 3vw;
+  }
+  
+  @media screen and (min-width: 1200px) {
+    font-size: 12px;
+    margin-bottom: 15px;
+  }
 }
 
 .register-button {
   width: 100%;
-  height: 40px;
+  height: 2.5vw;
   background-color: #409eff;
   color: #fff;
   border: none;
-  border-radius: 4px;
-  font-size: 16px;
+  border-radius: 0.25vw;
+  font-size: 1vw;
   cursor: pointer;
   transition: all 0.3s;
 
@@ -79,16 +133,38 @@
   &:active {
     background-color: #3a8ee6;
   }
+  
+  @media screen and (max-width: 768px) {
+    height: 12vw;
+    border-radius: 2vw;
+    font-size: 4.5vw;
+  }
+  
+  @media screen and (min-width: 1200px) {
+    height: 40px;
+    border-radius: 4px;
+    font-size: 16px;
+  }
 }
 
 .login-link {
-  margin-top: 15px;
+  margin-top: 0.9375vw;
   text-align: center;
   color: #409eff;
-  font-size: 14px;
+  font-size: 0.875vw;
   cursor: pointer;
 
   &:hover {
     color: #66b1ff;
+  }
+  
+  @media screen and (max-width: 768px) {
+    margin-top: 4vw;
+    font-size: 4vw;
+  }
+  
+  @media screen and (min-width: 1200px) {
+    margin-top: 15px;
+    font-size: 14px;
   }
 }
