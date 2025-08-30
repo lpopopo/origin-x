@@ -1,174 +1,282 @@
 .workspace {
   min-height: 100vh;
-  background-color: #f5f5f5;
-  padding-bottom: 15vh;
+  background-color: #f8f9fa;
+  display: flex;
+  flex-direction: column;
+  position: relative;
 }
 
-.workspace-header {
+/* 聊天消息区域 */
+.chat-messages {
+  flex: 1;
+  padding: 20px 16px;
+  padding-bottom: 200px; /* 为底部操作区域留出空间 */
+  overflow-y: auto;
+}
+
+.message {
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.user-message {
+  align-items: flex-end;
+}
+
+.ai-message {
+  align-items: flex-start;
+}
+
+.message-text {
+  max-width: 80%;
+  padding: 12px 16px;
+  border-radius: 18px;
+  font-size: 16px;
+  line-height: 1.4;
+  word-wrap: break-word;
+}
+
+.user-message .message-text {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 6vh 4vw;
-  text-align: center;
   color: white;
+  border-bottom-right-radius: 6px;
 }
 
-.workspace-title {
-  display: block;
-  font-size: 6vw;
-  font-weight: bold;
-  margin-bottom: 2vh;
-}
-
-.workspace-subtitle {
-  display: block;
-  font-size: 3.5vw;
-  opacity: 0.9;
-}
-
-.upload-section {
-  margin: 4vh 4vw;
-}
-
-.upload-area {
+.ai-message .message-text {
   background: white;
-  border: 0.2vw dashed #ddd;
-  border-radius: 2vw;
-  padding: 8vh 4vw;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.upload-area:hover {
-  border-color: #667eea;
-  background-color: #f8f9ff;
-}
-
-.upload-icon {
-  font-size: 12vw;
-  color: #ccc;
-  margin-bottom: 2vh;
-}
-
-.upload-text {
-  display: block;
-  font-size: 4.5vw;
   color: #333;
-  margin-bottom: 1vh;
+  border: 1px solid #e9ecef;
+  border-bottom-left-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.upload-hint {
-  display: block;
-  font-size: 3vw;
+.message-image {
+  max-width: 80%;
+  max-height: 200px;
+  border-radius: 12px;
+  border: 1px solid #e9ecef;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.message-image:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.image-container {
+  position: relative;
+  display: inline-block;
+}
+
+.preview-hint {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  font-size: 12px;
+  padding: 4px 6px;
+  border-radius: 12px;
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+.message-time {
+  font-size: 12px;
+  color: #999;
+  margin-top: 6px;
+  padding: 0 4px;
+}
+
+/* 底部操作区域 */
+.bottom-actions {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  border-top: 1px solid #e9ecef;
+  padding: 16px;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* 图片上传区域 */
+.upload-section {
+  margin-bottom: 16px;
+}
+
+.upload-btn {
+  width: 100%;
+  max-width: 120px;
+  height: 48px;
+  // background: white;
+  font-size: 16px;
+  color: #000;
+  border: 1px solid #e9ecef;
+  border-radius: 24px;
+  font-size: 16px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  transition: all 0.3s ease;
+  margin-left: 0;
+}
+
+.upload-btn:active {
+  transform: scale(0.98);
+  background: #f8f9fa;
+}
+
+.upload-btn:disabled {
+  opacity: 0.6;
+  background: #f0f0f0;
   color: #999;
 }
 
-.uploading-indicator {
-  text-align: center;
-  padding: 3vh 0;
-}
-
-.uploading-text {
-  font-size: 3.5vw;
-  color: #667eea;
-}
-
-.images-section {
-  margin: 4vh 4vw;
-}
-
-.section-header {
+/* 已上传图片预览 */
+.uploaded-image-preview {
+  position: relative;
+  margin-top: 12px;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 3vh;
+  gap: 12px;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  border: 1px solid #e9ecef;
 }
 
-.section-title {
-  font-size: 4.5vw;
-  font-weight: bold;
-  color: #333;
-}
-
-.image-count {
-  font-size: 3.5vw;
-  color: #666;
-  background: #f0f0f0;
-  padding: 1vh 2vw;
-  border-radius: 2vw;
-}
-
-.images-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 3vw;
-}
-
-.image-item {
-  background: white;
-  border-radius: 2vw;
-  overflow: hidden;
-  box-shadow: 0 0.5vw 2vw rgba(0, 0, 0, 0.1);
-}
-
-.uploaded-image {
-  width: 100%;
-  height: 25vh;
+.preview-image {
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
   object-fit: cover;
-}
-
-.image-actions {
-  display: flex;
-  padding: 2vh 2vw;
-  gap: 2vw;
-}
-
-.action-btn {
-  flex: 1;
-  font-size: 3vw;
-  padding: 1.5vh 0;
-  border: none;
-  border-radius: 1.5vw;
   cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.view-btn {
-  background: #667eea;
-  color: white;
+.preview-image:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
-.remove-btn {
+.remove-image-btn {
+  width: 24px;
+  height: 24px;
   background: #ff6b6b;
   color: white;
-}
-
-.workspace-tools {
-  margin: 4vh 4vw;
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 3vw;
-}
-
-.tool-item {
-  background: white;
-  padding: 4vh 3vw;
-  border-radius: 2vw;
-  text-align: center;
-  box-shadow: 0 0.5vw 2vw rgba(0, 0, 0, 0.1);
+  border: none;
+  border-radius: 50%;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  transition: transform 0.2s ease;
+  transition: all 0.2s ease;
 }
 
-.tool-item:hover {
-  transform: translateY(-0.5vh);
+.remove-image-btn:active {
+  transform: scale(0.9);
 }
 
-.tool-icon {
-  font-size: 8vw;
-  margin-bottom: 2vh;
+/* 输入框区域 */
+.input-section {
+  margin-top: 8px;
 }
 
-.tool-name {
-  font-size: 3.5vw;
+.input-wrapper {
+  display: flex;
+  align-items: center;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 24px;
+  padding: 8px 16px;
+  gap: 12px;
+}
+
+.input-icon {
+  font-size: 20px;
+  color: #667eea;
+  flex-shrink: 0;
+}
+
+.chat-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 16px;
   color: #333;
-  font-weight: 500;
+  padding: 8px 0;
+}
+
+.chat-input::placeholder {
+  color: #999;
+}
+
+.input-placeholder {
+  color: #999;
+}
+
+.send-btn {
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.send-btn:active {
+  transform: scale(0.95);
+}
+
+.send-btn:disabled {
+  opacity: 0.5;
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+/* 响应式设计 */
+@media (max-width: 912px) {
+  .chat-messages {
+    padding: 16px 12px;
+    padding-bottom: 180px;
+  }
+  
+  .bottom-actions {
+    padding: 12px;
+    padding-bottom: 120px;
+  }
+  
+  .message-text {
+    max-width: 85%;
+    font-size: 15px;
+    padding: 10px 14px;
+  }
+  
+  .upload-btn {
+    height: 44px;
+    font-size: 15px;
+  }
+  
+  .input-wrapper {
+    padding: 6px 12px;
+  }
+  
+  .chat-input {
+    font-size: 15px;
+  }
 }
