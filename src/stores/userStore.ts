@@ -84,7 +84,7 @@ export function UserProvider({ children, requireAuth = true }: UserProviderProps
             dispatch({ type: 'SET_LOADING', payload: true });
 
             const response = await AuthService.getUserProfile();
-            if (response.code === 200) {
+            if (response.code === 0) {
                 dispatch({ type: 'SET_USER', payload: response.data });
             } else {
                 throw new Error(response.message);
@@ -94,6 +94,9 @@ export function UserProvider({ children, requireAuth = true }: UserProviderProps
             // 获取用户信息失败，说明未登录或token无效
             dispatch({ type: 'CLEAR_USER' });
             dispatch({ type: 'SET_ERROR', payload: '获取用户信息失败' });
+            Taro.redirectTo({
+                url: '/pages/login/index'
+            });
         }
     };
 

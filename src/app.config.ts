@@ -1,9 +1,8 @@
 export default defineAppConfig({
   pages: [
+    'pages/index/index',
     'pages/login/index',
     'pages/register/index',
-    'pages/email-verify/index',
-    'pages/index/index',
     'pages/profile/index',
     'pages/workspace/index'
   ],

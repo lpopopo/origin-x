@@ -1,7 +1,7 @@
 import Taro from '@tarojs/taro';
 import { LoginForm, RegisterForm, AuthResponse, ApiResponse, EmailVerificationParams, UserProfile } from '../../types/auth';
 
-const BASE_URL = 'http://localhost:8080/api/v1';
+const BASE_URL = 'https://52725.uno/api/v1';
 
 export class AuthService {
   static async login(data: LoginForm): Promise<ApiResponse<AuthResponse>> {
@@ -60,18 +60,9 @@ export class AuthService {
 
   static async getUserProfile(): Promise<ApiResponse<UserProfile>> {
     try {
-      // 从本地存储获取token
-      const token = Taro.getStorageSync('accessToken');
-      if (!token) {
-        throw new Error('未找到访问令牌');
-      }
-
       const response = await Taro.request({
         url: `${BASE_URL}/users/profile`,
         method: 'GET',
-        header: {
-          'Authorization': `Bearer ${token}`,
-        },
       });
       return response.data;
     } catch (error) {
@@ -100,6 +91,32 @@ export class AuthService {
       Taro.removeStorageSync('refreshToken');
       Taro.removeStorageSync('expiresAt');
       Taro.removeStorageSync('userId');
+    }
+  }
+
+  static async sendVerificationCode(email: string): Promise<ApiResponse<null>> {
+    try {
+      const response = await Taro.request({
+        url: `${BASE_URL}/auth/send-code`,
+        method: 'POST',
+        data: { email },
+      });
+      return response.data;
+    } catch (error) {
+      throw new Error('发送验证码失败，请稍后重试');
+    }
+  }
+
+  static async verifyCode(email: string, code: string): Promise<ApiResponse<null>> {
+    try {
+      const response = await Taro.request({
+        url: `${BASE_URL}/auth/verify-code`,
+        method: 'POST',
+        data: { email, code },
+      });
+      return response.data;
+    } catch (error) {
+      throw new Error('验证码验证失败，请稍后重试');
     }
   }
 }
