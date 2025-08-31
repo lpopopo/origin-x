@@ -3,6 +3,7 @@ import Taro, { useLoad } from '@tarojs/taro'
 import { useState, useRef, useEffect } from 'react'
 import { UploadService } from '../../services/upload'
 import { H5UploadUtils } from '../../utils/h5Upload'
+import { GenerateService } from '../../services/generate'
 import './index.less'
 
 // 定义消息类型
@@ -30,6 +31,8 @@ export default function Workspace() {
   const [uploadedImage, setUploadedImage] = useState<UploadedImage | null>(null)
   const [isUploading, setIsUploading] = useState<boolean>(false)
   const [uploadProgress, setUploadProgress] = useState<number>(0)
+  const [cleanupFunction, setCleanupFunction] = useState<(() => void) | null>(null)
+  const [isProcessing, setIsProcessing] = useState<boolean>(false) // 是否正在处理任务
   const inputRef = useRef<any>(null)
   const uploadAreaRef = useRef<any>(null)
 
@@ -60,6 +63,15 @@ export default function Workspace() {
       return cleanup
     }
   }, [isH5])
+
+  // 组件卸载时清理SSE连接
+  useEffect(() => {
+    return () => {
+      if (cleanupFunction) {
+        cleanupFunction()
+      }
+    }
+  }, [cleanupFunction])
 
   // 处理拖拽上传
   const handleDragAndDrop = async (files: File[]): Promise<void> => {
@@ -275,13 +287,32 @@ export default function Workspace() {
   }
 
   // 处理发送消息
-  const handleSendMessage = (): void => {
-    if (!inputText.trim()) return
+  const handleSendMessage = async (): Promise<void> => {
+    if (!inputText.trim() && !uploadedImage) {
+      Taro.showToast({
+        title: '请输入文字描述或上传图片',
+        icon: 'none'
+      })
+      return
+    }
 
+    // 检查是否正在处理任务
+    if (isProcessing) {
+      Taro.showToast({
+        title: '正在处理中，请稍候...',
+        icon: 'none'
+      })
+      return
+    }
+
+    // 设置处理状态
+    setIsProcessing(true)
+
+    // 构建用户消息
     const userMessage: Message = {
       id: Date.now().toString(),
-      type: 'text',
-      content: inputText.trim(),
+      type: uploadedImage ? 'image' : 'text',
+      content: inputText.trim() || '生成图片',
       timestamp: Date.now(),
       isUser: true
     }
@@ -289,18 +320,100 @@ export default function Workspace() {
     setMessages(prev => [...prev, userMessage])
     setInputText('')
 
-    // 模拟AI回复
-    setTimeout(() => {
-      const aiReply: Message = {
+    // 如果有图片，显示图片消息
+    if (uploadedImage) {
+      const imageMessage: Message = {
         id: (Date.now() + 1).toString(),
-        type: 'text',
-        content: '我理解您的问题，让我为您提供帮助。',
+        type: 'image',
+        content: uploadedImage.url,
         timestamp: Date.now(),
-        isUser: false
+        isUser: true
       }
-      setMessages(prev => [...prev, aiReply])
-    }, 1000)
+      setMessages(prev => [...prev, imageMessage])
+    }
+
+    // 显示AI正在处理的消息
+    const processingMessage: Message = {
+      id: (Date.now() + 2).toString(),
+      type: 'text',
+      content: '正在处理您的请求...',
+      timestamp: Date.now(),
+      isUser: false
+    }
+    setMessages(prev => [...prev, processingMessage])
+
+    try {
+      // 调用API创建任务
+      const requestData: any = {
+        prompt: inputText.trim() || '生成图片',
+        objectKey: "uploads/a5d30ab5-ab0d-422f-b930-db9e4a9a782a/2.jpg"
+      }
+      
+      // 如果有上传的图片，添加objectKey
+      if (uploadedImage?.objectKey) {
+        requestData.objectKey = uploadedImage.objectKey
+      }
+
+      console.log('创建任务请求数据:', requestData)
+      const taskResponse = await GenerateService.createTask(requestData)
+      console.log('任务创建成功:', taskResponse)
+      
+      // 开始监听SSE状态更新
+      const cleanup = GenerateService.listenToTaskStatus(
+        taskResponse.taskId,
+        {
+          onConnected: (data) => {
+            console.log('SSE连接已建立:', data)
+            // 更新处理消息显示连接状态
+            setMessages(prev => prev.map(msg => 
+              msg.id === processingMessage.id 
+                ? { ...msg, content: '已连接到任务状态流，正在处理...' }
+                : msg
+            ))
+          },
+          onStatusUpdate: (data) => {
+            handleStatusUpdate(data, processingMessage.id)
+          },
+          onFinished: (data) => {
+            handleTaskFinished(data, processingMessage.id)
+          },
+          onError: (data) => {
+            handleTaskError(data, processingMessage.id)
+          },
+          onConnectionError: (error) => {
+            handleConnectionError(error, processingMessage.id)
+          }
+        }
+      )
+
+      // 存储清理函数，以便在组件卸载时调用
+      setCleanupFunction(() => cleanup)
+      
+    } catch (error) {
+      console.error('发送消息失败:', error)
+      
+      // 更新处理消息为错误状态
+      setMessages(prev => prev.map(msg => 
+        msg.id === processingMessage.id 
+          ? { ...msg, content: `处理失败: ${error instanceof Error ? error.message : '未知错误'}` }
+          : msg
+      ))
+      
+      Taro.showToast({
+        title: '发送失败，请重试',
+        icon: 'none'
+      })
+      
+      // 重置处理状态
+      setIsProcessing(false)
+    }
   }
+
+
+
+
+
+
 
   // 移除上传的图片
   const handleRemoveImage = (): void => {
@@ -313,6 +426,129 @@ export default function Workspace() {
       urls: [url],
       current: url
     })
+  }
+
+  // 处理状态更新事件
+  const handleStatusUpdate = (data: any, messageId: string) => {
+    const { status, progress } = data
+    console.log('任务状态更新:', data , status, progress)
+    
+    let statusText = '正在处理...'
+    if (status === 'processing') {
+      statusText = `正在生成中... ${progress}%`
+    } else if (status === 'pending') {
+      statusText = '任务已创建，等待处理...'
+    } else if (status === 'completed') {
+      statusText = '任务已完成，正在生成结果...'
+    }
+    
+    // 更新处理消息
+    setMessages(prev => prev.map(msg => 
+      msg.id === messageId 
+        ? { ...msg, content: statusText }
+        : msg
+    ))
+  }
+
+  // 处理任务完成事件
+  const handleTaskFinished = (data: any, messageId: string) => {
+    const { status, gifUrl, error, errorCode, gifFileSize, gifWidth, gifHeight, actualDuration } = data
+    console.log('任务完成:', data)
+    
+    // 重置处理状态
+    setIsProcessing(false)
+    
+    if (status === 'completed' && gifUrl) {
+      // 任务成功完成，显示生成的GIF
+      const successMessage: Message = {
+        id: (Date.now() + 3).toString(),
+        type: 'image',
+        content: gifUrl,
+        timestamp: Date.now(),
+        isUser: false
+      }
+      
+      // 移除处理消息，添加成功消息
+      setMessages(prev => [
+        ...prev.filter(msg => msg.id !== messageId),
+        successMessage
+      ])
+      
+      // 清除上传的图片
+      setUploadedImage(null)
+      
+      // 显示成功提示，包含文件信息
+      const fileInfo = `生成完成！文件大小: ${(gifFileSize / 1024 / 1024).toFixed(2)}MB, 尺寸: ${gifWidth}x${gifHeight}, 时长: ${actualDuration}秒`
+      Taro.showToast({
+        title: '生成完成！',
+        icon: 'success'
+      })
+      
+      console.log(fileInfo)
+    } else if (status === 'failed') {
+      // 任务失败
+      const errorMessage = error || '生成失败'
+      const errorDetails = errorCode ? ` (错误代码: ${errorCode})` : ''
+      
+      // 更新处理消息为失败状态
+      setMessages(prev => prev.map(msg => 
+        msg.id === messageId 
+          ? { ...msg, content: `生成失败: ${errorMessage}${errorDetails}` }
+          : msg
+      ))
+      
+      Taro.showToast({
+        title: '生成失败',
+        icon: 'none'
+      })
+    }
+  }
+
+  // 处理任务错误事件
+  const handleTaskError = (data: any, messageId: string) => {
+    const { error } = data
+    console.error('SSE错误:', error)
+    
+    // 重置处理状态
+    setIsProcessing(false)
+    
+    // 更新处理消息为错误状态
+    setMessages(prev => prev.map(msg => 
+      msg.id === messageId 
+        ? { ...msg, content: `发生错误: ${error}` }
+        : msg
+    ))
+    
+    Taro.showToast({
+      title: '发生错误',
+      icon: 'none'
+    })
+    
+    // 清除上传的图片，因为任务失败了
+    setUploadedImage(null)
+  }
+
+  // 处理连接错误事件
+  const handleConnectionError = (error: Error, messageId: string) => {
+    console.error('SSE连接错误:', error)
+    
+    // 重置处理状态
+    setIsProcessing(false)
+    
+    // 更新处理消息为错误状态
+    setMessages(prev => prev.map(msg => 
+      msg.id === messageId 
+        ? { ...msg, content: `连接失败: ${error.message}` }
+        : msg
+      ))
+    
+    Taro.showToast({
+      title: '连接失败',
+      icon: 'none'
+    })
+    
+    // 清除上传的图片，因为连接失败了
+    setUploadedImage(null)
   }
 
   return (
@@ -416,9 +652,9 @@ export default function Workspace() {
             <Button 
               className='send-btn'
               onClick={handleSendMessage}
-              disabled={!inputText.trim()}
+              disabled={!inputText.trim() || isProcessing}
             >
-              ➤
+              {isProcessing ? '处理中...' : '➤'}
             </Button>
           </View>
         </View>
