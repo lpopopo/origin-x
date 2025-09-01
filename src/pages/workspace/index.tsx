@@ -130,17 +130,6 @@ export default function Workspace() {
         // 设置上传的图片
         setUploadedImage(newImage)
         
-        // 添加图片消息（使用图床URL）
-        const imageMessage: Message = {
-          id: Date.now().toString(),
-          type: 'image',
-          content: imageUrl,
-          timestamp: Date.now(),
-          isUser: true
-        }
-        
-        setMessages(prev => [...prev, imageMessage])
-        
         // 隐藏加载提示
         Taro.hideLoading()
         
@@ -149,19 +138,6 @@ export default function Workspace() {
           title: '上传成功',
           icon: 'success'
         })
-        
-        // 模拟AI回复
-        setTimeout(() => {
-          const aiReply: Message = {
-            id: (Date.now() + 1).toString(),
-            type: 'text',
-            content: '我已经收到您上传的图片，请问有什么需要帮助的吗？',
-            timestamp: Date.now(),
-            isUser: false
-          }
-          setMessages(prev => [...prev, aiReply])
-        }, 1000)
-        
       } catch (uploadError) {
         console.error('图片上传到图床失败:', uploadError)
         const errorMessage = uploadError instanceof Error ? uploadError.message : '图片上传失败'
@@ -311,7 +287,7 @@ export default function Workspace() {
     // 构建用户消息
     const userMessage: Message = {
       id: Date.now().toString(),
-      type: uploadedImage ? 'image' : 'text',
+      type: 'text',
       content: inputText.trim() || '生成图片',
       timestamp: Date.now(),
       isUser: true
@@ -654,7 +630,7 @@ export default function Workspace() {
               onClick={handleSendMessage}
               disabled={!inputText.trim() || isProcessing}
             >
-              {isProcessing ? '处理中...' : '➤'}
+              ➤
             </Button>
           </View>
         </View>

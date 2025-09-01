@@ -22,10 +22,18 @@
 
 .user-message {
   align-items: flex-end;
+  .message-image,.image-container{
+    display: flex;
+    justify-content: end;
+  }
 }
 
 .ai-message {
   align-items: flex-start;
+  .message-image ,.image-container{
+      display: flex;
+      justify-content: start;
+    }
 }
 
 .message-text {
@@ -54,9 +62,6 @@
 .message-image {
   max-width: 80%;
   max-height: 200px;
-  border-radius: 12px;
-  border: 1px solid #e9ecef;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -122,8 +127,7 @@
 }
 
 .upload-btn {
-  width: 100%;
-  max-width: 120px;
+  width: 160px;
   height: 48px;
   font-size: 16px;
   color: #000;
@@ -303,9 +307,9 @@
   background: transparent;
   border: none;
   outline: none;
-  font-size: 16px;
+  font-size: 24px;
   color: #333;
-  padding: 8px 0;
+  padding: 16px 0;
 }
 
 .chat-input::placeholder {
@@ -317,13 +321,13 @@
 }
 
 .send-btn {
-  width: 36px;
-  height: 36px;
+  width: 48px;
+  height: 48px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border: none;
   border-radius: 50%;
-  font-size: 18px;
+  font-size: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -356,13 +360,13 @@
   
   .message-text {
     max-width: 85%;
-    font-size: 15px;
+    font-size: 24px;
     padding: 10px 14px;
   }
   
   .upload-btn {
     height: 44px;
-    font-size: 15px;
+    font-size: 24px;
   }
   
   .input-wrapper {
@@ -370,7 +374,7 @@
   }
   
   .chat-input {
-    font-size: 15px;
+    font-size: 24px;
   }
   
   .upload-progress,
