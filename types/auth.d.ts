@@ -47,20 +47,10 @@ export interface UserProfile {
 }
 
 export interface AuthResponse {
-  accessToken: string;
-  refreshToken: string;
-  expiresAt: string;
   user: UserInfo;
 }
 
 export interface EmailVerificationParams {
   token: string;
   email: string;
-}
-
-// API响应类型
-export interface ApiResponse<T> {
-  code: number;
-  message: string;
-  data: T;
 }

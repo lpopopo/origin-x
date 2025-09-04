@@ -1,5 +1,6 @@
 import Taro from '@tarojs/taro'
 import XRequest from '../utils/xRequest'
+import { RequestService } from '../utils/request'
 
 const safeParseJson = (json: string) => {
   try {
@@ -50,33 +51,13 @@ export interface TaskErrorEvent {
   error: string
 }
 
-const BASE_URL = 'https://52725.uno/api/v1'
-
 export class GenerateService {
   /**
    * 创建生成任务
    */
   static async createTask(request: GenerateTaskRequest): Promise<GenerateTaskResponse> {
     try {
-      const response = await Taro.request({
-        url: `${BASE_URL}/generate`,
-        method: 'POST',
-        data: request
-      })
-
-      if (response.statusCode === 200) {
-        // 检查响应结构
-        if (response.data.success) {
-          return response.data.data
-        } else if (response.data.data) {
-          // 直接返回data字段
-          return response.data.data
-        } else {
-          throw new Error(response.data.message || '创建任务失败')
-        }
-      } else {
-        throw new Error(`HTTP ${response.statusCode}: ${response.data.message || '创建任务失败'}`)
-      }
+      return await RequestService.post<GenerateTaskResponse>('/generate', request);
     } catch (error) {
       console.error('创建生成任务失败:', error)
       throw new Error('创建任务失败，请稍后重试')
@@ -99,7 +80,7 @@ export class GenerateService {
     try {
       // 使用 x-request 工具函数创建 SSE 连接
       const xRequest = XRequest({
-        baseURL: `${BASE_URL}/sse/tasks/${taskId}/stream`,
+        baseURL: `https://52725.uno/api/v1/sse/tasks/${taskId}/stream`,
       })
       // 创建 AbortController 用于控制连接
       const abortController = new AbortController()

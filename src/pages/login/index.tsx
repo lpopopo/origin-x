@@ -34,16 +34,9 @@ const Login: React.FC = () => {
     try {
       setLoading(true);
       const response = await AuthService.login(form);
-      
-      // 存储token
-      Taro.setStorageSync('accessToken', response.data.accessToken);
-      Taro.setStorageSync('refreshToken', response.data.refreshToken);
-      Taro.setStorageSync('expiresAt', response.data.expiresAt);
-      Taro.setStorageSync('userId', response.data.user.userId);
-
+      Taro.setStorageSync('userId', response.user.userId);
       // 获取用户信息并存储到全局store
       await fetchUserProfile();
-
       // 跳转到首页
       Taro.reLaunch({ url: '/pages/index/index' });
     } catch (err) {

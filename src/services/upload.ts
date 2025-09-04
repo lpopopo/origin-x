@@ -1,21 +1,11 @@
 import Taro from '@tarojs/taro';
 import { decodeURIComponentRecursive } from '../utils/decode';
+import { RequestService } from '../utils/request';
 
 // 获取上传URL的接口响应类型
 interface UploadUrlResponse {
-    code: number;
-    data: {
-        uploadUrl: string;
-        objectKey: string;
-    },
-    message: string;
-}
-
-// 获取上传URL的API响应类型
-interface ApiResponse<T> {
-  code: number;
-  message: string;
-  data: T;
+    uploadUrl: string;
+    objectKey: string;
 }
 
 // 上传进度回调类型
@@ -37,18 +27,7 @@ export class UploadService {
             'Content-Type': contentType,
         }
     try {
-      const response = await Taro.request({
-        url: `/api/v1/upload?filename=${encodeURIComponent(filename)}`,
-        method: 'GET',
-          header: headers
-      });
-
-      if (response.statusCode === 200) {
-        const data = response.data as UploadUrlResponse;
-        return data;
-      } else {
-        throw new Error(`获取上传地址失败: ${response.statusCode}`);
-      }
+      return await RequestService.get<UploadUrlResponse>(`/upload?filename=${encodeURIComponent(filename)}`, { header: headers });
     } catch (error) {
       console.error('获取上传地址失败:', error);
       throw error;
@@ -242,11 +221,7 @@ export class UploadService {
 
         // 3. 获取上传地址
         const uploadConfig = await this.getUploadUrl(filename) 
-        if (uploadConfig.code !== 0) {
-            throw new Error(uploadConfig.message)
-        }
-        
-        const { uploadUrl, objectKey } = uploadConfig.data
+        const { uploadUrl, objectKey } = uploadConfig
 
         // 4. 上传图片到图床
         await this.uploadImageToBed(uploadUrl, filePath, filename, onProgress);

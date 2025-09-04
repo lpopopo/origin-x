@@ -83,12 +83,8 @@ export function UserProvider({ children, requireAuth = true }: UserProviderProps
         try {
             dispatch({ type: 'SET_LOADING', payload: true });
 
-            const response = await AuthService.getUserProfile();
-            if (response.code === 0) {
-                dispatch({ type: 'SET_USER', payload: response.data });
-            } else {
-                throw new Error(response.message);
-            }
+            const userProfile = await AuthService.getUserProfile();
+            dispatch({ type: 'SET_USER', payload: userProfile });
         } catch (error) {
             console.error('获取用户信息失败:', error);
             // 获取用户信息失败，说明未登录或token无效
