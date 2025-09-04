@@ -14,10 +14,10 @@ export interface UserInfo {
   userId: string;
   email: string;
   username: string;
-  isActive: boolean;
-  isVerified: boolean;
+  userAvatar: string;           // 用户头像
+  isActive?: boolean;           // 后台管理接口才返回
+  isVerified?: boolean;         // 后台管理接口才返回
   balance: number;
-  createdAt: string;
 }
 
 export interface UserStats {
@@ -36,14 +36,14 @@ export interface UserQuota {
 export interface UserProfile {
   userId: string;
   email: string;
-  avatar: string;
   username: string;
-  isActive: boolean;
-  isVerified: boolean;
+  userAvatar: string;           // 用户头像
+  isActive?: boolean;           // 后台管理接口才返回
+  isVerified?: boolean;         // 后台管理接口才返回
   balance: number;
-  stats: UserStats;
-  quota: UserQuota;
-  createdAt: string;
+  stats?: UserStats;
+  quota?: UserQuota;
+  createdAt?: string;
 }
 
 export interface AuthResponse {

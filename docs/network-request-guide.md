@@ -165,7 +165,7 @@ const handleLogin = async () => {
     // 直接使用 response，不需要 response.data
     Taro.setStorageSync('userId', response.user.userId);
     await fetchUserProfile();
-    Taro.reLaunch({ url: '/pages/index/index' });
+    Taro.reLaunch({ url: '/pages/workspace/index' });
   } catch (err) {
     setError(err instanceof Error ? err.message : '登录失败，请稍后重试');
   } finally {

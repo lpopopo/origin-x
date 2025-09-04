@@ -25,6 +25,7 @@
 
 .user-info {
   flex: 1;
+  position: relative;
 }
 
 .username {
@@ -38,6 +39,141 @@
   display: block;
   font-size: 3.5vw;
   opacity: 0.9;
+  margin-bottom: 1vh;
+}
+
+.verified-badge {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.2);
+  border: 0.2vw solid rgba(255, 255, 255, 0.3);
+  border-radius: 2vw;
+  padding: 0.5vh 2vw;
+  margin-top: 1vh;
+}
+
+.verified-text {
+  font-size: 2.5vw;
+  color: white;
+  font-weight: 500;
+}
+
+.profile-balance {
+  background: white;
+  margin: 3vh 4vw;
+  border-radius: 2vw;
+  padding: 4vh 4vw;
+  box-shadow: 0 0.5vw 2vw rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.profile-balance::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 0.5vh;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+}
+
+.balance-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 2vh 0;
+  position: relative;
+}
+
+.balance-item:active {
+  transform: scale(0.98);
+  opacity: 0.8;
+}
+
+.balance-left {
+  display: flex;
+  align-items: center;
+  gap: 3vw;
+}
+
+.balance-icon-container {
+  border-radius: 50%;
+  position: relative;
+  overflow: hidden;
+}
+
+.balance-icon-container::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  transform: rotate(45deg);
+  animation: shine 3s infinite;
+}
+
+@keyframes shine {
+  0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+  100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+}
+
+.balance-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5vh;
+}
+
+.balance-label {
+  font-size: 4.5vw;
+  color: #333;
+  font-weight: 600;
+}
+
+.balance-subtitle {
+  font-size: 3vw;
+  color: #999;
+  font-weight: 400;
+}
+
+.balance-amount-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5vh;
+  position: relative;
+}
+
+.balance-amount {
+  font-size: 6vw;
+  color: #667eea;
+  font-weight: bold;
+  line-height: 1;
+  text-shadow: 0 0.2vw 0.4vw rgba(102, 126, 234, 0.2);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.balance-unit {
+  font-size: 3vw;
+  color: #999;
+  font-weight: 500;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.currency-icon {
+  width: 8vw;
+  height: 8vw;
+  filter: drop-shadow(0 0.2vw 0.4vw rgba(0, 0, 0, 0.1));
 }
 
 .profile-stats {

@@ -1,10 +1,9 @@
 export default defineAppConfig({
   pages: [
-    'pages/index/index',
     'pages/login/index',
     'pages/register/index',
-    'pages/profile/index',
-    'pages/workspace/index'
+    'pages/workspace/index',
+    'pages/profile/index'
   ],
   window: {
     backgroundTextStyle: 'light',
@@ -18,12 +17,6 @@ export default defineAppConfig({
     borderStyle: 'black',
     backgroundColor: '#ffffff',
     list: [
-      {
-        pagePath: 'pages/index/index',
-        iconPath: 'assets/home.png',
-        selectedIconPath: 'assets/home-active.png',
-        text: '首页'
-      },
       {
         pagePath: 'pages/workspace/index',
         iconPath: 'assets/workspace.png',

@@ -37,8 +37,8 @@ const Login: React.FC = () => {
       Taro.setStorageSync('userId', response.user.userId);
       // 获取用户信息并存储到全局store
       await fetchUserProfile();
-      // 跳转到首页
-      Taro.reLaunch({ url: '/pages/index/index' });
+      // 跳转到工作区页面
+      Taro.reLaunch({ url: '/pages/workspace/index' });
     } catch (err) {
       setError(err instanceof Error ? err.message : '登录失败，请稍后重试');
     } finally {
