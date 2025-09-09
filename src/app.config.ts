@@ -1,8 +1,8 @@
 export default defineAppConfig({
   pages: [
+    'pages/workspace/index',
     'pages/login/index',
     'pages/register/index',
-    'pages/workspace/index',
     'pages/profile/index'
   ],
   window: {
@@ -12,10 +12,10 @@ export default defineAppConfig({
     navigationBarTextStyle: 'black'
   },
   tabBar: {
-    color: '#7A7E83',
-    selectedColor: '#3cc51f',
+    color: '#808080',
+    selectedColor: '#667eea',
     borderStyle: 'black',
-    backgroundColor: '#ffffff',
+    backgroundColor: '#1e1e1e',
     list: [
       {
         pagePath: 'pages/workspace/index',

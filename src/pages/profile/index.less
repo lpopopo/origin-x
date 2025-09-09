@@ -1,26 +1,28 @@
+@import '../../styles/variables.less';
+
 .profile {
   min-height: 100vh;
-  background-color: #f5f5f5;
+  background: @bg-primary;
   padding-bottom: 15vh;
 }
 
 .profile-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 6vh 4vw;
+  padding: @spacing-2xl @spacing-lg;
   display: flex;
   align-items: center;
-  color: white;
+  color: @text-primary;
 }
 
 .avatar-container {
-  margin-right: 4vw;
+  margin-right: @spacing-lg;
 }
 
 .avatar {
-  width: 20vw;
-  height: 20vw;
-  border-radius: 50%;
-  border: 0.5vw solid rgba(255, 255, 255, 0.3);
+  width: 80px;
+  height: 80px;
+  border-radius: @border-radius-full;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  object-fit: cover;
 }
 
 .user-info {
@@ -30,51 +32,44 @@
 
 .username {
   display: block;
-  font-size: 5vw;
-  font-weight: bold;
-  margin-bottom: 1vh;
+  font-size: @font-size-4xl;
+  font-weight: @font-weight-bold;
+  margin-bottom: @spacing-sm;
+  line-height: @line-height-tight;
 }
 
 .email {
   display: block;
-  font-size: 3.5vw;
+  font-size: @font-size-xl;
   opacity: 0.9;
-  margin-bottom: 1vh;
+  margin-bottom: @spacing-sm;
+  line-height: @line-height-normal;
 }
 
 .verified-badge {
   display: inline-block;
   background: rgba(255, 255, 255, 0.2);
-  border: 0.2vw solid rgba(255, 255, 255, 0.3);
-  border-radius: 2vw;
-  padding: 0.5vh 2vw;
-  margin-top: 1vh;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: @border-radius-md;
+  padding: @spacing-xs @spacing-sm;
+  margin-top: @spacing-sm;
 }
 
 .verified-text {
-  font-size: 2.5vw;
-  color: white;
-  font-weight: 500;
+  font-size: @font-size-lg;
+  color: @text-primary;
+  font-weight: @font-weight-medium;
 }
 
 .profile-balance {
-  background: white;
-  margin: 3vh 4vw;
-  border-radius: 2vw;
-  padding: 4vh 4vw;
-  box-shadow: 0 0.5vw 2vw rgba(0, 0, 0, 0.1);
+  background: @bg-card;
+  margin: @spacing-lg @spacing-md;
+  border-radius: @border-radius-lg;
+  padding: @spacing-xl @spacing-lg;
+  box-shadow: @shadow-card;
   position: relative;
   overflow: hidden;
-}
-
-.profile-balance::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 0.5vh;
-  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  border: 1px solid @border-primary;
 }
 
 .balance-item {
@@ -82,9 +77,16 @@
   justify-content: space-between;
   align-items: center;
   cursor: pointer;
-  transition: all 0.3s ease;
-  padding: 2vh 0;
+  transition: @transition-normal;
+  padding: @spacing-md 0;
   position: relative;
+  
+  &:hover {
+    background: @bg-tertiary;
+    margin: 0 -@spacing-lg;
+    padding: @spacing-md @spacing-lg;
+    border-radius: @border-radius-md;
+  }
 }
 
 .balance-item:active {
@@ -95,13 +97,20 @@
 .balance-left {
   display: flex;
   align-items: center;
-  gap: 3vw;
+  gap: @spacing-md;
 }
 
 .balance-icon-container {
-  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  background: @bg-secondary;
+  border-radius: @border-radius-full;
   position: relative;
   overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid @border-primary;
 }
 
 .balance-icon-container::after {
@@ -113,6 +122,7 @@
   height: 200%;
   transform: rotate(45deg);
   animation: shine 3s infinite;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
 }
 
 @keyframes shine {
@@ -123,35 +133,37 @@
 .balance-info {
   display: flex;
   flex-direction: column;
-  gap: 0.5vh;
+  gap: @spacing-xs;
 }
 
 .balance-label {
-  font-size: 4.5vw;
-  color: #333;
-  font-weight: 600;
+  font-size: @font-size-2xl;
+  color: @text-primary;
+  font-weight: @font-weight-semibold;
+  line-height: @line-height-tight;
 }
 
 .balance-subtitle {
-  font-size: 3vw;
-  color: #999;
-  font-weight: 400;
+  font-size: @font-size-lg;
+  color: @text-secondary;
+  font-weight: @font-weight-normal;
+  line-height: @line-height-normal;
 }
 
 .balance-amount-container {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 0.5vh;
+  gap: @spacing-xs;
   position: relative;
 }
 
 .balance-amount {
-  font-size: 6vw;
-  color: #667eea;
-  font-weight: bold;
+  font-size: @font-size-4xl;
+  color: @primary-color;
+  font-weight: @font-weight-bold;
   line-height: 1;
-  text-shadow: 0 0.2vw 0.4vw rgba(102, 126, 234, 0.2);
+  text-shadow: 0 2px 4px rgba(102, 126, 234, 0.2);
   animation: pulse 2s ease-in-out infinite;
 }
 
@@ -161,76 +173,316 @@
 }
 
 .balance-unit {
-  font-size: 3vw;
-  color: #999;
-  font-weight: 500;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  font-size: @font-size-lg;
+  color: @text-secondary;
+  font-weight: @font-weight-medium;
+  background: @primary-gradient;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .currency-icon {
-  width: 8vw;
-  height: 8vw;
-  filter: drop-shadow(0 0.2vw 0.4vw rgba(0, 0, 0, 0.1));
+  width: 32px;
+  height: 32px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
 }
 
 .profile-stats {
-  background: white;
-  margin: 3vh 4vw;
-  border-radius: 2vw;
-  padding: 4vh 0;
+  background: @bg-card;
+  margin: @spacing-lg @spacing-md;
+  border-radius: @border-radius-lg;
+  padding: @spacing-xl 0;
   display: flex;
   justify-content: space-around;
-  box-shadow: 0 0.5vw 2vw rgba(0, 0, 0, 0.1);
+  box-shadow: @shadow-card;
+  border: 1px solid @border-primary;
 }
 
 .stat-item {
   text-align: center;
   flex: 1;
+  padding: @spacing-md;
+  transition: @transition-normal;
+  
+  &:hover {
+    background: @bg-tertiary;
+    border-radius: @border-radius-md;
+  }
 }
 
 .stat-number {
   display: block;
-  font-size: 6vw;
-  font-weight: bold;
-  color: #667eea;
-  margin-bottom: 1vh;
+  font-size: @font-size-4xl;
+  font-weight: @font-weight-bold;
+  color: @primary-color;
+  margin-bottom: @spacing-sm;
+  line-height: @line-height-tight;
 }
 
 .stat-label {
   display: block;
-  font-size: 3vw;
-  color: #666;
+  font-size: @font-size-lg;
+  color: @text-secondary;
+  line-height: @line-height-normal;
 }
 
 .profile-menu {
-  background: white;
-  margin: 3vh 4vw;
-  border-radius: 2vw;
+  background: @bg-card;
+  margin: @spacing-lg @spacing-md;
+  border-radius: @border-radius-lg;
   overflow: hidden;
-  box-shadow: 0 0.5vw 2vw rgba(0, 0, 0, 0.1);
+  box-shadow: @shadow-card;
+  border: 1px solid @border-primary;
 }
 
 .menu-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 4vh 4vw;
-  border-bottom: 0.1vw solid #f0f0f0;
-}
-
-.menu-item:last-child {
-  border-bottom: none;
+  padding: @spacing-xl @spacing-lg;
+  border-bottom: 1px solid @border-primary;
+  transition: @transition-normal;
+  cursor: pointer;
+  
+  &:hover {
+    background: @bg-tertiary;
+  }
+  
+  &:last-child {
+    border-bottom: none;
+  }
 }
 
 .menu-text {
-  font-size: 4vw;
-  color: #333;
+  font-size: @font-size-2xl;
+  color: @text-primary;
+  font-weight: @font-weight-medium;
+  line-height: @line-height-normal;
 }
 
 .menu-arrow {
-  font-size: 4vw;
-  color: #ccc;
+  font-size: @font-size-2xl;
+  color: @text-tertiary;
+  transition: @transition-normal;
+}
+
+.menu-item:hover .menu-arrow {
+  color: @text-secondary;
+  transform: translateX(2px);
+}
+
+// 响应式设计 - 移动端优化
+@media (max-width: @breakpoint-md) {
+  .profile-header {
+    padding: @spacing-xl @spacing-md;
+  }
+  
+  .avatar {
+    width: 70px;
+    height: 70px;
+  }
+  
+  .username {
+    font-size: @font-size-3xl;
+  }
+  
+  .email {
+    font-size: @font-size-lg;
+  }
+  
+  .profile-balance {
+    margin: @spacing-md;
+    padding: @spacing-lg @spacing-md;
+  }
+  
+  .balance-label {
+    font-size: @font-size-xl;
+  }
+  
+  .balance-subtitle {
+    font-size: @font-size-base;
+  }
+  
+  .balance-amount {
+    font-size: @font-size-3xl;
+  }
+  
+  .balance-unit {
+    font-size: @font-size-base;
+  }
+  
+  .profile-stats {
+    margin: @spacing-md;
+    padding: @spacing-lg 0;
+  }
+  
+  .stat-number {
+    font-size: @font-size-3xl;
+  }
+  
+  .stat-label {
+    font-size: @font-size-base;
+  }
+  
+  .profile-menu {
+    margin: @spacing-md;
+  }
+  
+  .menu-item {
+    padding: @spacing-lg @spacing-md;
+  }
+  
+  .menu-text {
+    font-size: @font-size-xl;
+  }
+  
+  .menu-arrow {
+    font-size: @font-size-xl;
+  }
+}
+
+// 小屏幕设备优化 - 增加字体大小
+@media (max-width: @breakpoint-sm) {
+  .profile-header {
+    padding: @spacing-xl @spacing-md;
+  }
+  
+  .avatar {
+    width: 75px;
+    height: 75px;
+  }
+  
+  .username {
+    font-size: @font-size-4xl;
+  }
+  
+  .email {
+    font-size: @font-size-xl;
+  }
+  
+  .profile-balance {
+    margin: @spacing-lg @spacing-md;
+    padding: @spacing-xl @spacing-lg;
+  }
+  
+  .balance-label {
+    font-size: @font-size-2xl;
+  }
+  
+  .balance-subtitle {
+    font-size: @font-size-lg;
+  }
+  
+  .balance-amount {
+    font-size: @font-size-4xl;
+  }
+  
+  .balance-unit {
+    font-size: @font-size-lg;
+  }
+  
+  .profile-stats {
+    margin: @spacing-lg @spacing-md;
+    padding: @spacing-xl 0;
+  }
+  
+  .stat-number {
+    font-size: @font-size-4xl;
+  }
+  
+  .stat-label {
+    font-size: @font-size-lg;
+  }
+  
+  .profile-menu {
+    margin: @spacing-lg @spacing-md;
+  }
+  
+  .menu-item {
+    padding: @spacing-xl @spacing-lg;
+  }
+  
+  .menu-text {
+    font-size: @font-size-2xl;
+  }
+  
+  .menu-arrow {
+    font-size: @font-size-2xl;
+  }
+}
+
+// H5特定优化 - 更大的字体
+@media screen and (min-width: 768px) {
+  .profile {
+    max-width: 520px;
+    margin: 0 auto;
+  }
+  
+  .profile-header {
+    padding: @spacing-3xl @spacing-2xl;
+  }
+  
+  .avatar {
+    width: 100px;
+    height: 100px;
+  }
+  
+  .username {
+    font-size: 36px;
+  }
+  
+  .email {
+    font-size: @font-size-2xl;
+  }
+  
+  .profile-balance {
+    margin: @spacing-2xl @spacing-xl;
+    padding: @spacing-3xl @spacing-2xl;
+  }
+  
+  .balance-label {
+    font-size: 30px;
+  }
+  
+  .balance-subtitle {
+    font-size: @font-size-xl;
+  }
+  
+  .balance-amount {
+    font-size: 40px;
+  }
+  
+  .balance-unit {
+    font-size: @font-size-xl;
+  }
+  
+  .profile-stats {
+    margin: @spacing-2xl @spacing-xl;
+    padding: @spacing-3xl 0;
+  }
+  
+  .stat-number {
+    font-size: 40px;
+  }
+  
+  .stat-label {
+    font-size: @font-size-xl;
+  }
+  
+  .profile-menu {
+    margin: @spacing-2xl @spacing-xl;
+  }
+  
+  .menu-item {
+    padding: @spacing-3xl @spacing-2xl;
+  }
+  
+  .menu-text {
+    font-size: 30px;
+  }
+  
+  .menu-arrow {
+    font-size: 30px;
+  }
 }

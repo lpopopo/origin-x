@@ -139,6 +139,7 @@ class XRequestClass {
             // }),
             headers: this.defaultHeaders,
             signal: abortController.signal,
+            credentials: "include" as RequestCredentials 
         };
 
         callbacks?.onStream?.(abortController);

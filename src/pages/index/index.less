@@ -1,113 +1,558 @@
+@import '../../styles/variables.less';
+
 .index {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding-bottom: 15vh;
-}
-
-.hero-section {
-  text-align: center;
-  padding: 8vh 4vw;
-  color: white;
-}
-
-.hero-title {
-  display: block;
-  font-size: 7vw;
-  font-weight: bold;
-  margin-bottom: 2vh;
-  text-shadow: 0 0.2vw 0.4vw rgba(0, 0, 0, 0.3);
-}
-
-.hero-subtitle {
-  display: block;
-  font-size: 4vw;
-  margin-bottom: 4vh;
-  opacity: 0.9;
-}
-
-.welcome-text {
-  display: block;
-  font-size: 3.5vw;
-  background: rgba(255, 255, 255, 0.2);
-  padding: 2vh 4vw;
-  border-radius: 3vw;
-  backdrop-filter: blur(1vw);
-}
-
-.features-section {
-  padding: 4vh 4vw;
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 3vw;
-}
-
-.feature-card {
-  background: white;
-  padding: 4vh 3vw;
-  border-radius: 2vw;
-  text-align: center;
-  box-shadow: 0 0.5vw 2vw rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease;
-}
-
-.feature-card:hover {
-  transform: translateY(-1vh);
-}
-
-.feature-icon {
-  font-size: 8vw;
-  margin-bottom: 2vh;
-}
-
-.feature-title {
-  display: block;
-  font-size: 4vw;
-  font-weight: bold;
-  color: #333;
-  margin-bottom: 1vh;
-}
-
-.feature-desc {
-  display: block;
-  font-size: 3vw;
-  color: #666;
-  line-height: 1.4;
-}
-
-.quick-actions {
-  padding: 6vh 4vw;
+  background: @bg-primary;
   display: flex;
-  gap: 3vw;
+  flex-direction: column;
 }
 
-.action-button {
-  flex: 1;
-  padding: 3vh 0;
-  border: none;
-  border-radius: 2vw;
-  font-size: 4vw;
-  font-weight: 500;
+// 侧边栏
+.sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: @sidebar-width;
+  height: 100vh;
+  background: @bg-secondary;
+  border-right: 1px solid @border-primary;
+  z-index: @z-index-fixed;
+  overflow-y: auto;
+  transition: @transition-normal;
+}
+
+.sidebar-header {
+  padding: @spacing-lg;
+  border-bottom: 1px solid @border-primary;
+  display: flex;
+  align-items: center;
+  gap: @spacing-sm;
+}
+
+.sidebar-logo {
+  width: 32px;
+  height: 32px;
+  background: @primary-gradient;
+  border-radius: @border-radius-md;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: @text-primary;
+  font-weight: @font-weight-bold;
+  font-size: @font-size-lg;
+}
+
+.sidebar-nav {
+  padding: @spacing-md 0;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: @spacing-sm;
+  padding: @spacing-sm @spacing-lg;
+  color: @text-secondary;
+  text-decoration: none;
+  transition: @transition-normal;
   cursor: pointer;
-  transition: all 0.3s ease;
+  font-size: @font-size-sm;
+  min-height: @touch-target-size;
+  
+  &:hover {
+    background: @bg-tertiary;
+    color: @text-primary;
+  }
+  
+  &.active {
+    background: @bg-tertiary;
+    color: @text-primary;
+    border-right: 2px solid @primary-color;
+  }
 }
 
-.action-button.primary {
-  background: #667eea;
-  color: white;
+.nav-icon {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.action-button.primary:hover {
-  background: #5a6fd8;
-  transform: translateY(-0.2vh);
+.nav-text {
+  font-weight: @font-weight-medium;
 }
 
-.action-button.secondary {
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-  border: 0.1vw solid rgba(255, 255, 255, 0.3);
+// 会员区域
+.membership-section {
+  padding: @spacing-md @spacing-lg;
+  border-top: 1px solid @border-primary;
+  border-bottom: 1px solid @border-primary;
 }
 
-.action-button.secondary:hover {
-  background: rgba(255, 255, 255, 0.3);
-  transform: translateY(-0.2vh);
+.membership-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: @spacing-sm 0;
+  color: @text-secondary;
+  font-size: @font-size-sm;
+  min-height: @touch-target-size;
+}
+
+.membership-badge {
+  background: @primary-gradient;
+  color: @text-primary;
+  padding: @spacing-xs @spacing-sm;
+  border-radius: @border-radius-sm;
+  font-size: @font-size-xs;
+  font-weight: @font-weight-medium;
+}
+
+// 主内容区域
+.main-content {
+  margin-left: @sidebar-width;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.content-header {
+  background: @bg-secondary;
+  border-bottom: 1px solid @border-primary;
+  padding: @spacing-md @spacing-lg;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: @header-height;
+}
+
+.header-controls {
+  display: flex;
+  gap: @spacing-sm;
+}
+
+.control-dropdown {
+  background: @bg-card;
+  border: 1px solid @border-primary;
+  border-radius: @border-radius-md;
+  padding: @spacing-xs @spacing-sm;
+  color: @text-primary;
+  font-size: @font-size-sm;
+  cursor: pointer;
+  transition: @transition-normal;
+  min-height: @touch-target-size;
+  min-width: @touch-target-size;
+  
+  &:hover {
+    border-color: @border-secondary;
+  }
+}
+
+.content-body {
+  flex: 1;
+  padding: @spacing-lg;
+  overflow-y: auto;
+}
+
+// 生成内容区域
+.generation-content {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: @spacing-lg;
+}
+
+.content-actions {
+  display: flex;
+  gap: @spacing-sm;
+  margin-bottom: @spacing-lg;
+}
+
+.action-btn {
+  background: @bg-card;
+  border: 1px solid @border-primary;
+  border-radius: @border-radius-md;
+  padding: @spacing-sm @spacing-md;
+  color: @text-primary;
+  font-size: @font-size-sm;
+  cursor: pointer;
+  transition: @transition-normal;
+  min-height: @touch-target-size;
+  
+  &:hover {
+    background: @bg-tertiary;
+    border-color: @border-secondary;
+  }
+}
+
+.content-description {
+  background: @bg-card;
+  border: 1px solid @border-primary;
+  border-radius: @border-radius-lg;
+  padding: @spacing-lg;
+  margin-bottom: @spacing-lg;
+  position: relative;
+}
+
+.description-quote {
+  font-size: @font-size-2xl;
+  color: @text-secondary;
+  margin-bottom: @spacing-sm;
+}
+
+.description-text {
+  color: @text-primary;
+  font-size: @font-size-base;
+  line-height: @line-height-relaxed;
+  margin-bottom: @spacing-md;
+}
+
+.description-meta {
+  color: @text-tertiary;
+  font-size: @font-size-sm;
+  display: flex;
+  align-items: center;
+  gap: @spacing-sm;
+}
+
+.generated-image {
+  width: 100%;
+  max-width: 600px;
+  border-radius: @border-radius-lg;
+  margin: @spacing-lg 0;
+  box-shadow: @shadow-lg;
+  cursor: pointer;
+  transition: @transition-normal;
+  
+  &:hover {
+    transform: scale(1.02);
+    box-shadow: @shadow-lg;
+  }
+}
+
+// 底部输入区域
+.bottom-input {
+  position: fixed;
+  bottom: 0;
+  left: @sidebar-width;
+  right: 0;
+  background: @bg-secondary;
+  border-top: 1px solid @border-primary;
+  padding: @spacing-lg;
+  z-index: @z-index-fixed;
+  min-height: @bottom-bar-height;
+}
+
+.input-container {
+  display: flex;
+  align-items: center;
+  gap: @spacing-md;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.input-addon {
+  background: @bg-card;
+  border: 1px solid @border-primary;
+  border-radius: @border-radius-md;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: @text-secondary;
+  cursor: pointer;
+  transition: @transition-normal;
+  min-width: @touch-target-size;
+  min-height: @touch-target-size;
+  
+  &:hover {
+    color: @text-primary;
+    border-color: @border-secondary;
+  }
+}
+
+.prompt-input {
+  flex: 1;
+  background: @bg-card;
+  border: 1px solid @border-primary;
+  border-radius: @border-radius-2xl;
+  padding: @spacing-md @spacing-lg;
+  color: @text-primary;
+  font-size: @font-size-base;
+  transition: @transition-normal;
+  min-height: @input-height;
+  
+  &::placeholder {
+    color: @text-tertiary;
+  }
+  
+  &:focus {
+    outline: none;
+    border-color: @border-accent;
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+  }
+}
+
+.input-controls {
+  display: flex;
+  gap: @spacing-sm;
+  margin-top: @spacing-md;
+  justify-content: center;
+}
+
+.control-btn {
+  background: @bg-card;
+  border: 1px solid @border-primary;
+  border-radius: @border-radius-md;
+  padding: @spacing-xs @spacing-sm;
+  color: @text-primary;
+  font-size: @font-size-sm;
+  cursor: pointer;
+  transition: @transition-normal;
+  display: flex;
+  align-items: center;
+  gap: @spacing-xs;
+  min-height: @touch-target-size;
+  
+  &:hover {
+    background: @bg-tertiary;
+    border-color: @border-secondary;
+  }
+}
+
+.vote-section {
+  display: flex;
+  align-items: center;
+  gap: @spacing-sm;
+  margin-left: auto;
+}
+
+.vote-counter {
+  background: @bg-card;
+  border: 1px solid @border-primary;
+  border-radius: @border-radius-md;
+  padding: @spacing-xs @spacing-sm;
+  color: @text-primary;
+  font-size: @font-size-sm;
+  font-weight: @font-weight-medium;
+}
+
+.vote-btn {
+  background: @bg-card;
+  border: 1px solid @border-primary;
+  border-radius: @border-radius-md;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: @text-secondary;
+  cursor: pointer;
+  transition: @transition-normal;
+  min-width: @touch-target-size;
+  min-height: @touch-target-size;
+  
+  &:hover {
+    color: @text-primary;
+    border-color: @border-secondary;
+  }
+}
+
+// 响应式设计
+@media (max-width: @breakpoint-lg) {
+  .sidebar {
+    transform: translateX(-100%);
+    width: @sidebar-width-mobile;
+    
+    &.open {
+      transform: translateX(0);
+    }
+  }
+  
+  .main-content {
+    margin-left: 0;
+  }
+  
+  .bottom-input {
+    left: 0;
+    min-height: @bottom-bar-height-mobile;
+  }
+  
+  .content-body {
+    padding: @spacing-md;
+  }
+  
+  .generation-content {
+    padding: @spacing-md;
+  }
+  
+  .input-container {
+    flex-direction: column;
+    gap: @spacing-sm;
+  }
+  
+  .input-controls {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: @breakpoint-md) {
+  .sidebar {
+    width: @sidebar-width-mobile;
+  }
+  
+  .sidebar-header {
+    padding: @spacing-lg-mobile;
+  }
+  
+  .nav-item {
+    padding: @spacing-sm-mobile @spacing-lg-mobile;
+    font-size: @font-size-sm-mobile;
+    min-height: @touch-target-size;
+  }
+  
+  .membership-section {
+    padding: @spacing-md-mobile @spacing-lg-mobile;
+  }
+  
+  .membership-item {
+    font-size: @font-size-sm-mobile;
+    min-height: @touch-target-size;
+  }
+  
+  .membership-badge {
+    font-size: @font-size-xs-mobile;
+    padding: @spacing-xs-mobile @spacing-sm-mobile;
+  }
+  
+  .content-header {
+    padding: @spacing-md-mobile @spacing-lg-mobile;
+    min-height: @header-height-mobile;
+  }
+  
+  .control-dropdown {
+    font-size: @font-size-sm-mobile;
+    min-height: @touch-target-size;
+    min-width: @touch-target-size;
+  }
+  
+  .content-body {
+    padding: @spacing-md-mobile;
+  }
+  
+  .generation-content {
+    padding: @spacing-md-mobile;
+  }
+  
+  .content-actions {
+    gap: @spacing-sm-mobile;
+  }
+  
+  .action-btn {
+    font-size: @font-size-sm-mobile;
+    padding: @spacing-sm-mobile @spacing-md-mobile;
+    min-height: @touch-target-size;
+  }
+  
+  .content-description {
+    padding: @spacing-lg-mobile;
+    border-radius: @border-radius-lg-mobile;
+  }
+  
+  .description-quote {
+    font-size: @font-size-2xl-mobile;
+  }
+  
+  .description-text {
+    font-size: @font-size-base-mobile;
+  }
+  
+  .description-meta {
+    font-size: @font-size-sm-mobile;
+  }
+  
+  .generated-image {
+    border-radius: @border-radius-lg-mobile;
+  }
+  
+  .bottom-input {
+    padding: @spacing-lg-mobile;
+    min-height: @bottom-bar-height-mobile;
+  }
+  
+  .input-container {
+    gap: @spacing-md-mobile;
+  }
+  
+  .input-addon {
+    width: 44px;
+    height: 44px;
+    min-width: @touch-target-size;
+    min-height: @touch-target-size;
+  }
+  
+  .prompt-input {
+    padding: @spacing-md-mobile @spacing-lg-mobile;
+    font-size: @font-size-base-mobile;
+    min-height: @input-height-mobile;
+    border-radius: @border-radius-2xl-mobile;
+  }
+  
+  .input-controls {
+    gap: @spacing-sm-mobile;
+  }
+  
+  .control-btn {
+    font-size: @font-size-sm-mobile;
+    padding: @spacing-xs-mobile @spacing-sm-mobile;
+    min-height: @touch-target-size;
+  }
+  
+  .vote-counter {
+    font-size: @font-size-sm-mobile;
+  }
+  
+  .vote-btn {
+    width: 44px;
+    height: 44px;
+    min-width: @touch-target-size;
+    min-height: @touch-target-size;
+  }
+}
+
+@media (max-width: @breakpoint-xs) {
+  .sidebar {
+    width: 100vw;
+  }
+  
+  .content-header {
+    padding: @spacing-sm-mobile @spacing-md-mobile;
+  }
+  
+  .content-body {
+    padding: @spacing-sm-mobile;
+  }
+  
+  .generation-content {
+    padding: @spacing-sm-mobile;
+  }
+  
+  .bottom-input {
+    padding: @spacing-md-mobile;
+  }
+  
+  .input-addon {
+    width: 48px;
+    height: 48px;
+  }
+  
+  .prompt-input {
+    min-height: 52px;
+  }
+  
+  .vote-btn {
+    width: 48px;
+    height: 48px;
+  }
 }

@@ -1,0 +1,178 @@
+@import '../styles/variables.less';
+
+.design-system-demo {
+  padding: @spacing-2xl;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.demo-section {
+  margin-bottom: @spacing-3xl;
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.section-title {
+  font-size: @font-size-2xl;
+  font-weight: @font-weight-bold;
+  color: @text-primary;
+  margin-bottom: @spacing-lg;
+  padding-bottom: @spacing-sm;
+  border-bottom: 1px solid @border-primary;
+}
+
+// 颜色系统演示
+.color-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: @spacing-lg;
+}
+
+.color-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: @spacing-sm;
+}
+
+.color-swatch {
+  width: 80px;
+  height: 80px;
+  border-radius: @border-radius-lg;
+  border: 1px solid @border-primary;
+  box-shadow: @shadow-sm;
+}
+
+.primary-gradient {
+  background: @primary-gradient;
+}
+
+.color-name {
+  font-size: @font-size-sm;
+  color: @text-secondary;
+  font-weight: @font-weight-medium;
+}
+
+// 按钮组演示
+.button-group {
+  display: flex;
+  gap: @spacing-md;
+  margin-bottom: @spacing-lg;
+  flex-wrap: wrap;
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+// 输入框组演示
+.input-group {
+  margin-bottom: @spacing-lg;
+  max-width: 400px;
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+// 徽章组演示
+.badge-group {
+  display: flex;
+  gap: @spacing-sm;
+  flex-wrap: wrap;
+}
+
+// 加载状态演示
+.loading-group {
+  display: flex;
+  align-items: center;
+  gap: @spacing-sm;
+  color: @text-primary;
+}
+
+// 工具提示演示
+.tooltip-group {
+  display: flex;
+  justify-content: center;
+  padding: @spacing-lg;
+}
+
+// 文字样式演示
+.text-group {
+  display: flex;
+  flex-direction: column;
+  gap: @spacing-sm;
+  
+  h1, h2, h3, h4, p {
+    margin: 0;
+  }
+}
+
+// 间距演示
+.spacing-demo {
+  display: flex;
+  flex-direction: column;
+  gap: @spacing-sm;
+}
+
+.spacing-item {
+  background: @bg-card;
+  border: 1px solid @border-primary;
+  border-radius: @border-radius-md;
+  padding: @spacing-sm;
+  color: @text-primary;
+  font-size: @font-size-sm;
+  display: flex;
+  align-items: center;
+  gap: @spacing-sm;
+  
+  &::before {
+    content: '';
+    width: 20px;
+    height: 20px;
+    background: @primary-color;
+    border-radius: @border-radius-sm;
+  }
+}
+
+// 响应式设计
+@media (max-width: @breakpoint-md) {
+  .design-system-demo {
+    padding: @spacing-lg;
+  }
+  
+  .color-grid {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: @spacing-md;
+  }
+  
+  .button-group {
+    flex-direction: column;
+    gap: @spacing-sm;
+  }
+  
+  .badge-group {
+    gap: @spacing-xs;
+  }
+  
+  .section-title {
+    font-size: @font-size-xl;
+  }
+}
+
+@media (max-width: @breakpoint-sm) {
+  .design-system-demo {
+    padding: @spacing-md;
+  }
+  
+  .color-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .color-swatch {
+    width: 60px;
+    height: 60px;
+  }
+}

@@ -1,6 +1,8 @@
+@import '../../styles/variables.less';
+
 .workspace {
   min-height: 100vh;
-  background-color: #f8f9fa;
+  background: @bg-primary;
   display: flex;
   flex-direction: column;
   position: relative;
@@ -9,13 +11,13 @@
 /* 聊天消息区域 */
 .chat-messages {
   flex: 1;
-  padding: 20px 16px;
+  padding: @spacing-lg @spacing-md;
   padding-bottom: 200px; /* 为底部操作区域留出空间 */
   overflow-y: auto;
 }
 
 .message {
-  margin-bottom: 20px;
+  margin-bottom: @spacing-lg;
   display: flex;
   flex-direction: column;
 }
@@ -38,37 +40,39 @@
 
 .message-text {
   max-width: 80%;
-  padding: 12px 16px;
-  border-radius: 18px;
-  font-size: 16px;
-  line-height: 1.4;
+  padding: @spacing-md @spacing-lg;
+  border-radius: @border-radius-xl;
+  font-size: @font-size-base;
+  line-height: @line-height-normal;
   word-wrap: break-word;
 }
 
 .user-message .message-text {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border-bottom-right-radius: 6px;
+  background: @primary-gradient;
+  color: @text-primary;
+  border-bottom-right-radius: @border-radius-sm;
 }
 
 .ai-message .message-text {
-  background: white;
-  color: #333;
-  border: 1px solid #e9ecef;
-  border-bottom-left-radius: 6px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: @bg-card;
+  color: @text-primary;
+  border: 1px solid @border-primary;
+  border-bottom-left-radius: @border-radius-sm;
+  box-shadow: @shadow-sm;
 }
 
 .message-image {
   max-width: 80%;
   max-height: 200px;
+  border-radius: @border-radius-lg;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: @transition-normal;
+  box-shadow: @shadow-sm;
 }
 
 .message-image:hover {
   transform: scale(1.02);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: @shadow-md;
 }
 
 .image-container {
@@ -77,10 +81,10 @@
 }
 
 .message-time {
-  font-size: 12px;
-  color: #999;
-  margin-top: 6px;
-  padding: 0 4px;
+  font-size: @font-size-xs;
+  color: @text-tertiary;
+  margin-top: @spacing-xs;
+  padding: 0 @spacing-xs;
 }
 
 /* 底部操作区域 */
@@ -89,152 +93,164 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: white;
-  border-top: 1px solid #e9ecef;
-  padding: 16px;
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+  background: @bg-secondary;
+  border-top: 1px solid @border-primary;
+  padding: @spacing-lg;
+  box-shadow: @shadow-lg;
+  z-index: @z-index-fixed;
 }
 
 /* 图片上传区域 */
 .upload-section {
-  margin-bottom: 16px;
+  margin-bottom: @spacing-lg;
   position: relative;
-  transition: all 0.3s ease;
+  transition: @transition-normal;
 }
 
 .upload-section.drag-over {
-  border: 2px dashed #007AFF;
-  background-color: #f0f8ff;
-  border-radius: 12px;
-  padding: 16px;
-  margin: -16px;
-  margin-bottom: 16px;
+  border: 2px dashed @accent-color;
+  background: rgba(0, 122, 255, 0.1);
+  border-radius: @border-radius-lg;
+  padding: @spacing-lg;
+  margin: -@spacing-lg;
+  margin-bottom: @spacing-lg;
 }
 
 /* 拖拽提示 */
 .drag-hint {
   display: block;
   text-align: center;
-  font-size: 12px;
-  color: #666;
-  margin-top: 8px;
+  font-size: @font-size-sm;
+  color: @text-secondary;
+  margin-top: @spacing-sm;
   font-style: italic;
 }
 
 .upload-section.drag-over .drag-hint {
-  color: #007AFF;
-  font-weight: 500;
+  color: @accent-color;
+  font-weight: @font-weight-medium;
 }
 
 .upload-btn {
   width: 160px;
   height: 48px;
-  font-size: 16px;
-  color: #000;
-  border: 1px solid #e9ecef;
-  border-radius: 24px;
-  font-weight: 500;
+  font-size: @font-size-base;
+  color: @text-primary;
+  background: @bg-card;
+  border: 1px solid @border-primary;
+  border-radius: @border-radius-2xl;
+  font-weight: @font-weight-medium;
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  gap: 8px;
-  transition: all 0.3s ease;
+  gap: @spacing-sm;
+  transition: @transition-normal;
   margin-left: 0;
+  cursor: pointer;
+  
+  &:hover {
+    background: @bg-tertiary;
+    border-color: @border-secondary;
+  }
 }
 
 .upload-btn:active {
   transform: scale(0.98);
-  background: #f8f9fa;
+  background: @bg-tertiary;
 }
 
 .upload-btn:disabled {
   opacity: 0.6;
-  background: #f0f0f0;
-  color: #999;
+  background: @bg-secondary;
+  color: @text-disabled;
+  cursor: not-allowed;
 }
 
 /* 上传进度条 */
 .upload-progress {
-  margin-top: 12px;
-  padding: 12px;
-  background: #f8f9fa;
-  border-radius: 8px;
-  border: 1px solid #e9ecef;
+  margin-top: @spacing-md;
+  padding: @spacing-md;
+  background: @bg-card;
+  border-radius: @border-radius-md;
+  border: 1px solid @border-primary;
 }
 
 .progress-text {
   display: block;
   text-align: center;
-  font-size: 14px;
-  color: #007AFF;
-  margin-top: 8px;
-  font-weight: 500;
+  font-size: @font-size-sm;
+  color: @accent-color;
+  margin-top: @spacing-sm;
+  font-weight: @font-weight-medium;
 }
 
 /* 上传错误提示 */
 .upload-error {
-  margin-top: 12px;
-  padding: 12px;
-  background: #fff5f5;
-  border: 1px solid #fed7d7;
-  border-radius: 8px;
+  margin-top: @spacing-md;
+  padding: @spacing-md;
+  background: rgba(255, 77, 79, 0.1);
+  border: 1px solid @error-color;
+  border-radius: @border-radius-md;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: @spacing-md;
 }
 
 .error-text {
   flex: 1;
-  font-size: 14px;
-  color: #e53e3e;
-  line-height: 1.4;
+  font-size: @font-size-sm;
+  color: @error-color;
+  line-height: @line-height-normal;
 }
 
 .clear-error-btn {
-  background: #e53e3e;
-  color: white;
+  background: @error-color;
+  color: @text-primary;
   border: none;
-  border-radius: 4px;
-  padding: 4px 8px;
-  font-size: 12px;
+  border-radius: @border-radius-sm;
+  padding: @spacing-xs @spacing-sm;
+  font-size: @font-size-xs;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: @transition-normal;
   flex-shrink: 0;
+  
+  &:hover {
+    background: darken(@error-color, 10%);
+  }
 }
 
 .clear-error-btn:active {
   transform: scale(0.95);
-  background: #c53030;
 }
 
 /* 已上传图片预览 */
 .uploaded-image-preview {
   position: relative;
-  margin-top: 12px;
+  margin-top: @spacing-md;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px;
-  background: #f8f9fa;
-  border-radius: 12px;
-  border: 1px solid #e9ecef;
-  gap: 12px;
+  padding: @spacing-md;
+  background: @bg-card;
+  border-radius: @border-radius-lg;
+  border: 1px solid @border-primary;
+  gap: @spacing-md;
 }
 
 .preview-image {
   width: 60px;
   height: 60px;
-  border-radius: 8px;
+  border-radius: @border-radius-md;
   object-fit: cover;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: @transition-normal;
   flex-shrink: 0;
 }
 
 .preview-image:hover {
   transform: scale(1.05);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: @shadow-md;
 }
 
 /* 图片信息 */
@@ -242,39 +258,43 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: @spacing-xs;
   min-width: 0;
 }
 
 .image-name {
-  font-size: 14px;
-  color: #333;
-  font-weight: 500;
+  font-size: @font-size-sm;
+  color: @text-primary;
+  font-weight: @font-weight-medium;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .image-size {
-  font-size: 12px;
-  color: #666;
+  font-size: @font-size-xs;
+  color: @text-secondary;
 }
 
 .remove-image-btn {
   width: 24px;
   height: 24px;
-  background: #ff6b6b;
-  color: white;
+  background: @error-color;
+  color: @text-primary;
   border: none;
-  border-radius: 50%;
-  font-size: 16px;
+  border-radius: @border-radius-full;
+  font-size: @font-size-base;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: @transition-normal;
   user-select: none;
   flex-shrink: 0;
+  
+  &:hover {
+    background: darken(@error-color, 10%);
+  }
 }
 
 .remove-image-btn:active {
@@ -283,22 +303,22 @@
 
 /* 输入框区域 */
 .input-section {
-  margin-top: 8px;
+  margin-top: @spacing-sm;
 }
 
 .input-wrapper {
   display: flex;
   align-items: center;
-  background: #f8f9fa;
-  border: 1px solid #e9ecef;
-  border-radius: 24px;
-  padding: 8px 16px;
-  gap: 12px;
+  background: @bg-card;
+  border: 1px solid @border-primary;
+  border-radius: @border-radius-2xl;
+  padding: @spacing-sm @spacing-lg;
+  gap: @spacing-md;
 }
 
 .input-icon {
-  font-size: 20px;
-  color: #667eea;
+  font-size: @font-size-xl;
+  color: @primary-color;
   flex-shrink: 0;
 }
 
@@ -307,33 +327,39 @@
   background: transparent;
   border: none;
   outline: none;
-  font-size: 24px;
-  color: #333;
-  padding: 16px 0;
-}
-
-.chat-input::placeholder {
-  color: #999;
+  font-size: @font-size-base;
+  color: @text-primary;
+  padding: @spacing-md 0;
+  
+  &::placeholder {
+    color: @text-tertiary;
+  }
 }
 
 .input-placeholder {
-  color: #999;
+  color: @text-tertiary;
 }
 
 .send-btn {
   width: 48px;
   height: 48px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: rgb(245 251 255);
+  color: @text-primary;
   border: none;
-  border-radius: 50%;
-  font-size: 24px;
+  border-radius: @border-radius-full;
+  font-size: @font-size-xl;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: @transition-normal;
   flex-shrink: 0;
+  
+  &:hover:not(:disabled) {
+    box-shadow: @shadow-md;
+    transform: scale(1.05);
+    background: rgb(55 59 69);
+  }
 }
 
 .send-btn:active {
@@ -342,49 +368,49 @@
 
 .send-btn:disabled {
   opacity: 0.5;
-  background: #ccc;
+  background: @bg-secondary;
   cursor: not-allowed;
 }
 
 /* 响应式设计 */
-@media (max-width: 912px) {
+@media (max-width: @breakpoint-lg) {
   .chat-messages {
-    padding: 16px 12px;
+    padding: @spacing-md @spacing-sm;
     padding-bottom: 180px;
   }
   
   .bottom-actions {
-    padding: 12px;
+    padding: @spacing-md;
     padding-bottom: 120px;
   }
   
   .message-text {
     max-width: 85%;
-    font-size: 24px;
-    padding: 10px 14px;
+    font-size: @font-size-base;
+    padding: @spacing-sm @spacing-md;
   }
   
   .upload-btn {
     height: 44px;
-    font-size: 24px;
+    font-size: @font-size-base;
   }
   
   .input-wrapper {
-    padding: 6px 12px;
+    padding: @spacing-xs @spacing-md;
   }
   
   .chat-input {
-    font-size: 24px;
+    font-size: @font-size-base;
   }
   
   .upload-progress,
   .upload-error {
-    padding: 10px;
+    padding: @spacing-sm;
   }
   
   .uploaded-image-preview {
-    padding: 10px;
-    gap: 10px;
+    padding: @spacing-sm;
+    gap: @spacing-sm;
   }
   
   .preview-image {
@@ -393,10 +419,10 @@
   }
   
   .image-name {
-    font-size: 13px;
+    font-size: @font-size-xs;
   }
   
   .image-size {
-    font-size: 11px;
+    font-size: @font-size-xs;
   }
 }

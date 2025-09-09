@@ -1,3 +1,141 @@
-*{
-    box-sizing: border-box;
+@import './styles/variables.less';
+@import './styles/global.less';
+
+// 应用根样式
+#app {
+  min-height: 100vh;
+  background-color: @bg-primary;
+  color: @text-primary;
+  font-family: @font-family;
+}
+
+// 页面容器
+.page-container {
+  min-height: 100vh;
+  background-color: @bg-primary;
+  display: flex;
+  flex-direction: column;
+}
+
+// 侧边栏样式
+.sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: @sidebar-width;
+  height: 100vh;
+  background: @bg-secondary;
+  border-right: 1px solid @border-primary;
+  z-index: @z-index-fixed;
+  overflow-y: auto;
+  transition: @transition-normal;
+}
+
+.sidebar-header {
+  padding: @spacing-lg;
+  border-bottom: 1px solid @border-primary;
+  display: flex;
+  align-items: center;
+  gap: @spacing-sm;
+}
+
+.sidebar-logo {
+  width: 32px;
+  height: 32px;
+  background: @primary-gradient;
+  border-radius: @border-radius-md;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: @text-primary;
+  font-weight: @font-weight-bold;
+}
+
+.sidebar-nav {
+  padding: @spacing-md 0;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: @spacing-sm;
+  padding: @spacing-sm @spacing-lg;
+  color: @text-secondary;
+  text-decoration: none;
+  transition: @transition-normal;
+  cursor: pointer;
+  
+  &:hover {
+    background: @bg-tertiary;
+    color: @text-primary;
+  }
+  
+  &.active {
+    background: @bg-tertiary;
+    color: @text-primary;
+    border-right: 2px solid @primary-color;
+  }
+}
+
+.nav-icon {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// 主内容区域
+.main-content {
+  margin-left: @sidebar-width;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.content-header {
+  background: @bg-secondary;
+  border-bottom: 1px solid @border-primary;
+  padding: @spacing-md @spacing-lg;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.content-body {
+  flex: 1;
+  padding: @spacing-lg;
+  overflow-y: auto;
+}
+
+// 底部操作栏
+.bottom-bar {
+  position: fixed;
+  bottom: 0;
+  left: @sidebar-width;
+  right: 0;
+  background: @bg-secondary;
+  border-top: 1px solid @border-primary;
+  padding: @spacing-md @spacing-lg;
+  z-index: @z-index-fixed;
+}
+
+// 响应式设计
+@media (max-width: @breakpoint-lg) {
+  .sidebar {
+    transform: translateX(-100%);
+    
+    &.open {
+      transform: translateX(0);
+    }
+  }
+  
+  .main-content {
+    margin-left: 0;
+  }
+  
+  .bottom-bar {
+    left: 0;
+  }
 }

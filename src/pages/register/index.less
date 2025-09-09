@@ -1,312 +1,269 @@
-@import '../../app.less';
+@import '../../styles/variables.less';
 
 .register-container {
   min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: #f5f5f5;
-  padding: 1.25vw;
-  
-  @media screen and (max-width: 768px) {
-    padding: 4vw;
-  }
+  background: @bg-primary;
+  padding: @spacing-lg;
 }
 
 .register-box {
   width: 100%;
-  max-width: 25vw;
-  background-color: #fff;
-  border-radius: 0.5vw;
-  padding: 1.875vw;
-  box-shadow: 0 0.125vw 0.75vw rgba(0, 0, 0, 0.1);
-
-  @media screen and (max-width: 768px) {
-    max-width: 92vw;
-    padding: 6vw;
-    border-radius: 2vw;
-  }
+  max-width: 400px;
+  background: @bg-card;
+  border: 1px solid @border-primary;
+  border-radius: @border-radius-xl;
+  padding: @spacing-2xl;
+  box-shadow: @shadow-lg;
+  transition: @transition-normal;
   
-  @media screen and (min-width: 1200px) {
-    max-width: 400px;
-    padding: 30px;
+  &:hover {
+    box-shadow: @shadow-lg;
   }
+}
+
+.register-header {
+  text-align: center;
+  margin-bottom: @spacing-2xl;
+}
+
+.register-logo {
+  width: 64px;
+  height: 64px;
+  background: @primary-gradient;
+  border-radius: @border-radius-lg;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto @spacing-lg;
+  color: @text-primary;
+  font-weight: @font-weight-bold;
+  font-size: @font-size-2xl;
 }
 
 .register-title {
-  font-size: 1.5vw;
-  font-weight: bold;
-  text-align: center;
-  margin-bottom: 1.875vw;
-  color: #333;
-  
-  @media screen and (max-width: 768px) {
-    font-size: 6vw;
-    margin-bottom: 6vw;
-  }
-  
-  @media screen and (min-width: 1200px) {
-    font-size: 24px;
-    margin-bottom: 30px;
-  }
+  font-size: @font-size-2xl;
+  font-weight: @font-weight-bold;
+  color: @text-primary;
+  margin-bottom: @spacing-sm;
+}
+
+.register-subtitle {
+  font-size: @font-size-sm;
+  color: @text-secondary;
+  line-height: @line-height-normal;
 }
 
 .form-item {
-  margin-bottom: 1.25vw;
-  
-  @media screen and (max-width: 768px) {
-    margin-bottom: 4vw;
-  }
-  
-  @media screen and (min-width: 1200px) {
-    margin-bottom: 20px;
-  }
+  margin-bottom: @spacing-lg;
+}
+
+.form-label {
+  display: block;
+  font-size: @font-size-sm;
+  font-weight: @font-weight-medium;
+  color: @text-primary;
+  margin-bottom: @spacing-sm;
 }
 
 .input {
   width: 100%;
-  height: 2.5vw;
-  border: 0.0625vw solid #dcdfe6;
-  border-radius: 0.25vw;
-  padding: 0 0.9375vw;
-  font-size: 0.875vw;
-  transition: all 0.3s;
-
+  height: 48px;
+  background: @bg-secondary;
+  border: 1px solid @border-primary;
+  border-radius: @border-radius-md;
+  padding: 0 @spacing-md;
+  color: @text-primary;
+  font-size: @font-size-base;
+  transition: @transition-normal;
+  
+  &::placeholder {
+    color: @text-tertiary;
+  }
+  
   &:focus {
-    border-color: #409eff;
     outline: none;
-  }
-
-  .weui-input {
-    height: 100%;
+    border-color: @border-accent;
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
   }
   
-  @media screen and (max-width: 768px) {
-    height: 12vw;
-    border: 0.5vw solid #dcdfe6;
-    border-radius: 2vw;
-    padding: 0 4vw;
-    font-size: 4vw;
-  }
-  
-  @media screen and (min-width: 1200px) {
-    height: 40px;
-    border: 1px solid #dcdfe6;
-    border-radius: 4px;
-    padding: 0 15px;
-    font-size: 14px;
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
 }
 
 .error-text {
-  color: #f56c6c;
-  font-size: 0.75vw;
-  margin-bottom: 0.9375vw;
+  color: @error-color;
+  font-size: @font-size-sm;
+  margin-top: @spacing-xs;
   display: block;
-  
-  @media screen and (max-width: 768px) {
-    font-size: 3.5vw;
-    margin-bottom: 3vw;
-  }
-  
-  @media screen and (min-width: 1200px) {
-    font-size: 12px;
-    margin-bottom: 15px;
-  }
 }
 
 .register-button {
   width: 100%;
-  height: 2.5vw;
-  background-color: #409eff;
-  color: #fff;
+  height: 48px;
+  background: @primary-gradient;
+  color: @text-primary;
   border: none;
-  border-radius: 0.25vw;
-  font-size: 1vw;
+  border-radius: @border-radius-md;
+  font-size: @font-size-base;
+  font-weight: @font-weight-medium;
   cursor: pointer;
-  transition: all 0.3s;
-
-  &:hover {
-    background-color: #66b1ff;
+  transition: @transition-normal;
+  
+  &:hover:not(:disabled) {
+    box-shadow: @shadow-md;
+    transform: translateY(-1px);
   }
-
+  
   &:active {
-    background-color: #3a8ee6;
+    transform: translateY(0);
   }
   
-  @media screen and (max-width: 768px) {
-    height: 12vw;
-    border-radius: 2vw;
-    font-size: 4.5vw;
-  }
-  
-  @media screen and (min-width: 1200px) {
-    height: 40px;
-    border-radius: 4px;
-    font-size: 16px;
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
 }
 
 .login-link {
-  margin-top: 0.9375vw;
+  margin-top: @spacing-lg;
   text-align: center;
-  color: #409eff;
-  font-size: 0.875vw;
+  color: @primary-color;
+  font-size: @font-size-sm;
   cursor: pointer;
-
+  transition: @transition-normal;
+  
   &:hover {
-    color: #66b1ff;
-  }
-  
-  @media screen and (max-width: 768px) {
-    margin-top: 4vw;
-    font-size: 4vw;
-  }
-  
-  @media screen and (min-width: 1200px) {
-    margin-top: 15px;
-    font-size: 14px;
+    color: @secondary-color;
   }
 }
 
 .verification-info {
   text-align: center;
-  margin-bottom: 1.25vw;
-  padding: 0.9375vw;
-  background-color: #f0f9ff;
-  border-radius: 0.25vw;
-  border: 0.0625vw solid #b3d8ff;
-  
-  @media screen and (max-width: 768px) {
-    margin-bottom: 4vw;
-    padding: 3vw;
-    border-radius: 2vw;
-    border: 0.5vw solid #b3d8ff;
-  }
-  
-  @media screen and (min-width: 1200px) {
-    margin-bottom: 20px;
-    padding: 15px;
-    border-radius: 4px;
-    border: 1px solid #b3d8ff;
-  }
+  margin-bottom: @spacing-lg;
+  padding: @spacing-md;
+  background: rgba(24, 144, 255, 0.1);
+  border-radius: @border-radius-md;
+  border: 1px solid @info-color;
   
   text {
     display: block;
-    color: #409eff;
-    font-size: 0.875vw;
-    line-height: 1.5;
-    
-    @media screen and (max-width: 768px) {
-      font-size: 4vw;
-    }
-    
-    @media screen and (min-width: 1200px) {
-      font-size: 14px;
-    }
+    color: @info-color;
+    font-size: @font-size-sm;
+    line-height: @line-height-normal;
   }
 }
 
 .verification-success {
   text-align: center;
-  margin-bottom: 1.25vw;
-  padding: 0.9375vw;
-  background-color: #f0f9ff;
-  border-radius: 0.25vw;
-  border: 0.0625vw solid #67c23a;
-  
-  @media screen and (max-width: 768px) {
-    margin-bottom: 4vw;
-    padding: 3vw;
-    border-radius: 2vw;
-    border: 0.5vw solid #67c23a;
-  }
-  
-  @media screen and (min-width: 1200px) {
-    margin-bottom: 20px;
-    padding: 15px;
-    border-radius: 4px;
-    border: 1px solid #67c23a;
-  }
+  margin-bottom: @spacing-lg;
+  padding: @spacing-md;
+  background: rgba(82, 196, 26, 0.1);
+  border-radius: @border-radius-md;
+  border: 1px solid @success-color;
   
   text {
     display: block;
-    color: #67c23a;
-    font-size: 0.875vw;
-    line-height: 1.5;
-    
-    @media screen and (max-width: 768px) {
-      font-size: 4vw;
-    }
-    
-    @media screen and (min-width: 1200px) {
-      font-size: 14px;
-    }
+    color: @success-color;
+    font-size: @font-size-sm;
+    line-height: @line-height-normal;
   }
 }
 
 .secondary-button {
   width: 100%;
-  height: 2.5vw;
-  background-color: #f5f7fa;
-  color: #606266;
-  border: 0.0625vw solid #dcdfe6;
-  border-radius: 0.25vw;
-  font-size: 1vw;
+  height: 48px;
+  background: @bg-secondary;
+  color: @text-secondary;
+  border: 1px solid @border-primary;
+  border-radius: @border-radius-md;
+  font-size: @font-size-base;
+  font-weight: @font-weight-medium;
   cursor: pointer;
-  transition: all 0.3s;
-  margin-top: 0.625vw;
-
-  &:hover {
-    background-color: #e4e7ed;
-    border-color: #c0c4cc;
+  transition: @transition-normal;
+  margin-top: @spacing-sm;
+  
+  &:hover:not(:disabled) {
+    background: @bg-tertiary;
+    border-color: @border-secondary;
+    color: @text-primary;
   }
-
+  
   &:active {
-    background-color: #dcdfe6;
+    transform: scale(0.98);
   }
   
   &:disabled {
-    background-color: #f5f7fa;
-    color: #c0c4cc;
+    opacity: 0.6;
     cursor: not-allowed;
-  }
-  
-  @media screen and (max-width: 768px) {
-    height: 12vw;
-    border-radius: 2vw;
-    font-size: 4.5vw;
-    margin-top: 3vw;
-    border: 0.5vw solid #dcdfe6;
-  }
-  
-  @media screen and (min-width: 1200px) {
-    height: 40px;
-    border-radius: 4px;
-    font-size: 16px;
-    margin-top: 10px;
-    border: 1px solid #dcdfe6;
+    color: @text-disabled;
   }
 }
 
 .back-link {
-  margin-top: 0.9375vw;
+  margin-top: @spacing-lg;
   text-align: center;
-  color: #909399;
-  font-size: 0.875vw;
+  color: @text-tertiary;
+  font-size: @font-size-sm;
   cursor: pointer;
-
+  transition: @transition-normal;
+  
   &:hover {
-    color: #606266;
+    color: @text-secondary;
+  }
+}
+
+.divider {
+  margin: @spacing-lg 0;
+  display: flex;
+  align-items: center;
+  color: @text-tertiary;
+  font-size: @font-size-sm;
+  
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: @border-primary;
   }
   
-  @media screen and (max-width: 768px) {
-    margin-top: 4vw;
-    font-size: 4vw;
+  span {
+    padding: 0 @spacing-md;
+  }
+}
+
+// 响应式设计
+@media (max-width: @breakpoint-sm) {
+  .register-container {
+    padding: @spacing-md;
   }
   
-  @media screen and (min-width: 1200px) {
-    margin-top: 15px;
-    font-size: 14px;
+  .register-box {
+    max-width: 100%;
+    padding: @spacing-xl;
+  }
+  
+  .register-title {
+    font-size: @font-size-xl;
+  }
+  
+  .input {
+    height: 44px;
+    font-size: @font-size-base;
+  }
+  
+  .register-button {
+    height: 44px;
+    font-size: @font-size-base;
+  }
+  
+  .secondary-button {
+    height: 44px;
+    font-size: @font-size-base;
   }
 }

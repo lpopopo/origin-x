@@ -1,0 +1,144 @@
+// 设计系统变量 - 暗色主题
+// 基于图片中的UI设计风格
+
+// 颜色系统
+@primary-color: #667eea;
+@primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+@secondary-color: #764ba2;
+@accent-color: #007AFF;
+
+// 背景色
+@bg-primary: #0a0a0a;
+@bg-secondary: #1a1a1a;
+@bg-tertiary: #2a2a2a;
+@bg-card: #1e1e1e;
+@bg-overlay: rgba(0, 0, 0, 0.8);
+
+// 文字颜色
+@text-primary: #ffffff;
+@text-secondary: #b0b0b0;
+@text-tertiary: #808080;
+@text-disabled: #404040;
+
+// 边框颜色
+@border-primary: #333333;
+@border-secondary: #404040;
+@border-accent: #667eea;
+
+// 状态颜色
+@success-color: #52c41a;
+@warning-color: #faad14;
+@error-color: #ff4d4f;
+@info-color: #1890ff;
+
+// 阴影
+@shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+@shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+@shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+@shadow-card: 0 2px 12px rgba(0, 0, 0, 0.3);
+
+// 字体系统 - 移动端优化
+@font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+
+// 移动端字体大小 - 基于16px基准，确保可读性
+@font-size-xs: 12px;      // 辅助文字
+@font-size-sm: 14px;      // 小号文字
+@font-size-base: 16px;    // 正文基准
+@font-size-lg: 18px;      // 大号文字
+@font-size-xl: 20px;      // 标题
+@font-size-2xl: 24px;     // 大标题
+@font-size-3xl: 28px;     // 特大标题
+@font-size-4xl: 32px;     // 超大标题
+
+// 移动端字体大小 - 小屏幕优化
+@font-size-xs-mobile: 13px;
+@font-size-sm-mobile: 15px;
+@font-size-base-mobile: 16px;
+@font-size-lg-mobile: 18px;
+@font-size-xl-mobile: 20px;
+@font-size-2xl-mobile: 22px;
+@font-size-3xl-mobile: 26px;
+@font-size-4xl-mobile: 30px;
+
+// 字体粗细
+@font-weight-light: 300;
+@font-weight-normal: 400;
+@font-weight-medium: 500;
+@font-weight-semibold: 600;
+@font-weight-bold: 700;
+
+// 行高
+@line-height-tight: 1.25;
+@line-height-normal: 1.5;
+@line-height-relaxed: 1.75;
+
+// 间距系统 - 移动端优化
+@spacing-xs: 4px;
+@spacing-sm: 8px;
+@spacing-md: 12px;        // 调整为12px，更适合移动端
+@spacing-lg: 16px;        // 调整为16px
+@spacing-xl: 24px;        // 调整为24px
+@spacing-2xl: 32px;       // 调整为32px
+@spacing-3xl: 48px;      // 调整为48px
+
+// 移动端间距 - 更紧凑
+@spacing-xs-mobile: 6px;
+@spacing-sm-mobile: 10px;
+@spacing-md-mobile: 14px;
+@spacing-lg-mobile: 18px;
+@spacing-xl-mobile: 26px;
+@spacing-2xl-mobile: 36px;
+@spacing-3xl-mobile: 52px;
+
+// 圆角 - 移动端优化
+@border-radius-sm: 6px;       // 调整为6px
+@border-radius-md: 8px;       // 调整为8px
+@border-radius-lg: 12px;      // 调整为12px
+@border-radius-xl: 16px;      // 调整为16px
+@border-radius-2xl: 20px;     // 调整为20px
+@border-radius-full: 50%;
+
+// 移动端圆角 - 更圆润
+@border-radius-sm-mobile: 8px;
+@border-radius-md-mobile: 10px;
+@border-radius-lg-mobile: 14px;
+@border-radius-xl-mobile: 18px;
+@border-radius-2xl-mobile: 24px;
+
+// 过渡动画
+@transition-fast: 0.15s ease;
+@transition-normal: 0.3s ease;
+@transition-slow: 0.5s ease;
+
+// 布局 - 移动端优化
+@sidebar-width: 240px;
+@sidebar-width-mobile: 280px;  // 移动端侧边栏更宽
+@header-height: 56px;          // 调整为56px，更适合移动端
+@header-height-mobile: 60px;   // 移动端头部高度
+@bottom-bar-height: 80px;      // 底部操作栏高度
+@bottom-bar-height-mobile: 88px; // 移动端底部栏更高
+
+// 响应式断点 - 移动端优化
+@breakpoint-xs: 375px;     // iPhone SE
+@breakpoint-sm: 576px;     // 小屏幕
+@breakpoint-md: 768px;     // 中等屏幕
+@breakpoint-lg: 992px;     // 大屏幕
+@breakpoint-xl: 1200px;    // 超大屏幕
+
+// Z-index层级
+@z-index-dropdown: 1000;
+@z-index-sticky: 1020;
+@z-index-fixed: 1030;
+@z-index-modal-backdrop: 1040;
+@z-index-modal: 1050;
+@z-index-popover: 1060;
+@z-index-tooltip: 1070;
+
+// 移动端特定变量
+@touch-target-size: 44px;      // 触摸目标最小尺寸
+@input-height: 44px;          // 输入框高度
+@input-height-mobile: 48px;   // 移动端输入框更高
+@button-height: 44px;         // 按钮高度
+@button-height-mobile: 48px;  // 移动端按钮更高
+@card-padding: 16px;          // 卡片内边距
+@card-padding-mobile: 18px;  // 移动端卡片内边距

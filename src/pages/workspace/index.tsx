@@ -385,12 +385,6 @@ export default function Workspace() {
     }
   }
 
-
-
-
-
-
-
   // 移除上传的图片
   const handleRemoveImage = (): void => {
     setUploadedImage(null)
