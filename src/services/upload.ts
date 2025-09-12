@@ -5,7 +5,7 @@ import { RequestService } from '../utils/request';
 // 获取上传URL的接口响应类型
 interface UploadUrlResponse {
     uploadUrl: string;
-    objectKey: string;
+    imageUrl: string;
 }
 
 // 上传进度回调类型
@@ -197,13 +197,13 @@ export class UploadService {
    * @param filePath 本地文件路径或File对象
    * @param filename 文件名
    * @param onProgress 上传进度回调
-   * @returns 图床URL和对象键
+   * @returns 图床URL
    */
   static async uploadImage(
     filePath: string | File, 
     filename: string,
     onProgress?: UploadProgressCallback
-  ): Promise<{ imageUrl: string; objectKey: string }> {
+  ): Promise<{ imageUrl: string }> {
     try {
         // 1. 验证文件类型
         if (!this.isValidImageFile(filePath)) {
@@ -219,25 +219,57 @@ export class UploadService {
           }
         }
 
-        // 3. 获取上传地址
-        const uploadConfig = await this.getUploadUrl(filename) 
-        const { uploadUrl, objectKey } = uploadConfig
+        // 开发环境Mock逻辑
+        if (process.env.NODE_ENV === 'development') {
+          return this.mockUploadImage(onProgress);
+        }
 
-        // 4. 上传图片到图床
+        // 3. 获取上传地址和预览地址
+        const uploadConfig = await this.getUploadUrl(filename) 
+        const { uploadUrl, imageUrl } = uploadConfig
+
+        // 4. 上传图片到OSS
         await this.uploadImageToBed(uploadUrl, filePath, filename, onProgress);
         
-        // 5. 构建最终的图片访问URL（去掉查询参数）
-        const imageUrl = uploadUrl.split('?')[0];
-        
+        // 5. 返回预览地址
         return {
-          imageUrl,
-          objectKey
+          imageUrl
         };
     } catch (error) {
       console.error('图片上传流程失败:', error);
       throw error;
     }
   }
+
+  /**
+   * 开发环境Mock上传
+   * @param onProgress 上传进度回调
+   * @returns Mock的图片URL
+   */
+  static async mockUploadImage(onProgress?: UploadProgressCallback): Promise<{ imageUrl: string }> {
+    console.log('🔧 开发环境Mock上传，使用本地示例图片');
+    
+    // 模拟上传进度
+    if (onProgress) {
+      const progressSteps = [20, 40, 60, 80, 100];
+      for (const progress of progressSteps) {
+        await new Promise(resolve => setTimeout(resolve, 150));
+        onProgress(progress);
+      }
+    } else {
+      // 如果没有进度回调，也要模拟一下上传时间
+      await new Promise(resolve => setTimeout(resolve, 800));
+    }
+
+    // 返回本地示例图片路径
+    const imageUrl = require('../assets/example.jpg');
+    console.log('✅ Mock上传完成，图片地址:', imageUrl);
+    
+    return {
+      imageUrl
+    };
+  }
+
 
   /**
    * H5环境下的文件选择器

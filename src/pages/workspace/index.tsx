@@ -1,18 +1,23 @@
-import { View, Text, Button, Image, Input, Progress } from '@tarojs/components'
+import { View, Text, Button, Image, Video, Input, Progress, Textarea } from '@tarojs/components'
 import Taro, { useLoad } from '@tarojs/taro'
 import { useState, useRef, useEffect } from 'react'
 import { UploadService } from '../../services/upload'
 import { H5UploadUtils } from '../../utils/h5Upload'
-import { GenerateService, DemoExample } from '../../services/generate'
+import { GenerateService, DemoExample, GenerateConfig } from '../../services/generate'
+import { useUser } from '../../stores/userStore'
 import './index.less'
 
 // 定义消息类型
 interface Message {
   id: string
-  type: 'text' | 'image'
+  type: 'text' | 'image' | 'demo-card'
   content: string
   timestamp: number
   isUser: boolean
+  demoData?: {
+    videoUrl: string
+    prompt: string
+  }
 }
 
 // 定义上传的图片类型
@@ -21,11 +26,13 @@ interface UploadedImage {
   url: string
   name: string
   size: number
-  objectKey?: string // 图床返回的对象键
+  width?: number // 图片宽度
+  height?: number // 图片高度
   uploadTime: number // 上传时间
 }
 
 export default function Workspace() {
+  const { state: userState } = useUser()
   const [messages, setMessages] = useState<Message[]>([])
   const [inputText, setInputText] = useState<string>('')
   const [uploadedImage, setUploadedImage] = useState<UploadedImage | null>(null)
@@ -37,13 +44,54 @@ export default function Workspace() {
   const [isDragOver, setIsDragOver] = useState<boolean>(false)
   const [demoExample, setDemoExample] = useState<DemoExample | null>(null)
   const [isLoadingDemo, setIsLoadingDemo] = useState<boolean>(false)
+  const [generateConfig, setGenerateConfig] = useState<GenerateConfig | null>(null)
+  const [showModal, setShowModal] = useState<boolean>(false)
+  const [isModalClosing, setIsModalClosing] = useState<boolean>(false)
+  const [modalParams, setModalParams] = useState({
+    style: 'default',
+    duration: 3,
+    fps: 30,
+    quality: 'high'
+  })
+  const [videoSources, setVideoSources] = useState<{[key: string]: string}>({})
   const uploadAreaRef = useRef<any>(null)
   const inputRef = useRef<any>(null)
+  const buttonRef = useRef<any>(null)
 
   useLoad(() => {
     console.log('Workspace page loaded.')
     loadDemoExample()
+    loadGenerateConfig()
+    
+    // 添加机器人欢迎消息
+    const welcomeMessage: Message = {
+      id: 'welcome-' + Date.now().toString(),
+      type: 'text',
+      content: '你好！😄 只需要上传一张图片🏞，然后描述你想要的动画效果✨，我就能为你生成精彩的动图！\n\n💡 支持人物动作、物体移动、特效添加等多种动画类型',
+      timestamp: Date.now(),
+      isUser: false
+    }
+    setMessages([welcomeMessage])
   })
+
+  // 加载生成配置
+  const loadGenerateConfig = async (): Promise<void> => {
+    try {
+      const config = await GenerateService.getGenerateConfig()
+      setGenerateConfig(config)
+      console.log('生成配置加载成功:', config)
+    } catch (error) {
+      console.error('加载生成配置失败:', error)
+      // 使用默认配置
+      setGenerateConfig({
+        styles: {
+          '默认风格': 'default',
+          '卡通风格': 'cartoon',
+          '写实风格': 'realistic'
+        }
+      })
+    }
+  }
 
   // 加载demo示例数据
   const loadDemoExample = async (): Promise<void> => {
@@ -51,6 +99,30 @@ export default function Workspace() {
       setIsLoadingDemo(true)
       const demo = await GenerateService.getDemoExample()
       setDemoExample(demo)
+      
+      // 预加载视频URL
+      const videoUrl = await createVideoUrl(demo.prevVideoUrl)
+      setVideoSources(prev => ({
+        ...prev,
+        [demo.prevVideoUrl]: videoUrl
+      }))
+      
+      // 添加demo卡片消息到聊天
+      const demoCardMessage: Message = {
+        id: 'demo-card-' + Date.now().toString(),
+        type: 'demo-card',
+        content: '这是一个示例效果，点击下方动图可以快速体验',
+        timestamp: Date.now(),
+        isUser: false,
+        demoData: {
+          videoUrl: demo.prevVideoUrl,
+          prompt: demo.prompt
+        }
+      }
+      
+      // 添加demo消息（在欢迎消息之后）
+      setMessages(prev => [...prev, demoCardMessage])
+      
     } catch (error) {
       console.error('加载demo示例失败:', error)
       // 使用默认的示例数据作为后备
@@ -60,6 +132,22 @@ export default function Workspace() {
         prompt: '让头发飘动，眼睛眨动，背景添加飘落的樱花特效',
         style: 'default'
       })
+      
+      // 即使是默认数据也添加到消息中
+      const demoCardMessage: Message = {
+        id: 'demo-card-fallback-' + Date.now().toString(),
+        type: 'demo-card',
+        content: '这是一个示例效果，点击下方动图可以快速体验',
+        timestamp: Date.now(),
+        isUser: false,
+        demoData: {
+          videoUrl: 'https://via.placeholder.com/300x200/FFB6C1/DDDDDD?text=Demo+GIF',
+          prompt: '让头发飘动，眼睛眨动，背景添加飘落的樱花特效'
+        }
+      }
+      
+      setMessages(prev => [...prev, demoCardMessage])
+      
     } finally {
       setIsLoadingDemo(false)
     }
@@ -67,6 +155,31 @@ export default function Workspace() {
 
   // 检测当前环境
   const isH5 = Taro.getEnv() === Taro.ENV_TYPE.WEB
+
+  // 处理视频URL的函数，添加必要的headers
+  const createVideoUrl = async (originalUrl: string): Promise<string> => {
+    if (!isH5 || !originalUrl) return originalUrl
+    
+    try {
+      // 在H5环境下，通过fetch获取视频内容并创建blob URL
+      const response = await fetch(originalUrl, {
+        headers: {
+          'Accept': 'video/mp4,video/*,*/*;q=0.9',
+          'Referer': window.location.origin
+        }
+      })
+      
+      if (response.ok) {
+        const blob = await response.blob()
+        const blobUrl = URL.createObjectURL(blob)
+        return blobUrl
+      }
+    } catch (error) {
+      console.warn('Failed to load video with headers, falling back to direct URL:', error)
+    }
+    
+    return originalUrl
+  }
 
   // 启用拖拽上传（仅H5环境）
   useEffect(() => {
@@ -80,14 +193,20 @@ export default function Workspace() {
     }
   }, [isH5, uploadAreaRef.current])
 
-  // 组件卸载时清理SSE连接
+  // 组件卸载时清理SSE连接和视频blob URLs
   useEffect(() => {
     return () => {
       if (cleanupFunction) {
         cleanupFunction()
       }
+      // 清理所有blob URLs
+      Object.values(videoSources).forEach(url => {
+        if (url.startsWith('blob:')) {
+          URL.revokeObjectURL(url)
+        }
+      })
     }
-  }, [cleanupFunction])
+  }, [cleanupFunction, videoSources])
 
   // 处理拖拽上传
   const handleDragAndDrop = async (files: File[]): Promise<void> => {
@@ -110,8 +229,21 @@ export default function Workspace() {
     setIsDragOver(false)
   }
 
+  // 获取图片尺寸
+  const getImageDimensions = (file: File): Promise<{width: number, height: number}> => {
+    return new Promise((resolve, reject) => {
+      const img = new window.Image()
+      img.onload = () => {
+        resolve({ width: img.width, height: img.height })
+        URL.revokeObjectURL(img.src) // 清理内存
+      }
+      img.onerror = reject
+      img.src = URL.createObjectURL(file)
+    })
+  }
+
   // 处理文件上传
-  const handleFileUpload = async (file: File): Promise<void> => {
+  const handleFileUpload = async (file:File): Promise<void> => {
     try {
       setIsUploading(true)
       setUploadProgress(0)
@@ -127,6 +259,14 @@ export default function Workspace() {
         throw new Error(`文件大小不能超过${H5UploadUtils.formatFileSize(maxSize)}`)
       }
       
+      // 获取图片尺寸
+      const dimensions = await getImageDimensions(file)
+      
+      // 验证图片尺寸范围
+      if (dimensions.width < 300 || dimensions.height < 300 || dimensions.width > 3000 || dimensions.height > 3000) {
+        throw new Error('图片尺寸不符合要求，请上传300×300至3000×3000范围内的图片')
+      }
+      
       // 显示上传进度提示
       Taro.showLoading({
         title: '正在上传图片...'
@@ -139,7 +279,7 @@ export default function Workspace() {
         }
         
         // 上传图片到图床
-        const { imageUrl, objectKey } = await UploadService.uploadImage(
+        const { imageUrl } = await UploadService.uploadImage(
           file, 
           file.name, 
           onProgress
@@ -151,7 +291,8 @@ export default function Workspace() {
           url: imageUrl,
           name: file.name,
           size: file.size,
-          objectKey: objectKey,
+          width: dimensions.width,
+          height: dimensions.height,
           uploadTime: Date.now()
         }
         
@@ -227,6 +368,20 @@ export default function Workspace() {
         const fileName = file?.originalFileObj?.name || `image_${Date.now()}.jpg`
         const fileSize = file?.size || 0
         
+        // 小程序环境获取图片信息
+        const imageInfo = await new Promise<{width: number, height: number}>((resolve, reject) => {
+          Taro.getImageInfo({
+            src: localPath,
+            success: (res) => resolve({ width: res.width, height: res.height }),
+            fail: reject
+          })
+        })
+        
+        // 验证图片尺寸范围
+        if (imageInfo.width < 300 || imageInfo.height < 300 || imageInfo.width > 3000 || imageInfo.height > 3000) {
+          throw new Error('图片尺寸不符合要求，请上传300×300至3000×3000范围内的图片')
+        }
+        
         // 显示上传进度提示
         Taro.showLoading({
           title: '正在上传图片...'
@@ -239,7 +394,7 @@ export default function Workspace() {
           }
           
           // 上传图片到图床
-          const { imageUrl, objectKey } = await UploadService.uploadImage(
+          const { imageUrl } = await UploadService.uploadImage(
             localPath, 
             fileName, 
             onProgress
@@ -251,7 +406,8 @@ export default function Workspace() {
             url: imageUrl,
             name: fileName,
             size: fileSize,
-            objectKey: objectKey,
+            width: imageInfo.width,
+            height: imageInfo.height,
             uploadTime: Date.now()
           }
           
@@ -294,29 +450,6 @@ export default function Workspace() {
 
 
 
-  // 使用示例功能
-  const handleUseExample = (): void => {
-    if (!demoExample) {
-      Taro.showToast({
-        title: '示例数据尚未加载',
-        icon: 'none'
-      })
-      return
-    }
-
-    // 设置示例图片
-    const exampleImage: UploadedImage = {
-      id: 'demo-' + Date.now().toString(),
-      url: demoExample.imageUrl,
-      name: '示例图片.jpg',
-      size: 0, // API没提供大小信息
-      uploadTime: Date.now()
-    }
-    setUploadedImage(exampleImage)
-
-    // 设置示例提示词
-    setInputText(demoExample.prompt)
-  }
 
   // 处理发送消息
   const handleSendMessage = async (): Promise<void> => {
@@ -349,19 +482,22 @@ export default function Workspace() {
       isUser: true
     }
 
-    setMessages(prev => [...prev, userMessage])
-
-    // 如果有图片，显示图片消息
+    // 先添加图片消息（如果有的话），再添加文本消息
+    const messagesToAdd = []
+    
     if (uploadedImage) {
       const imageMessage: Message = {
-        id: (Date.now() + 1).toString(),
+        id: (Date.now() - 1).toString(),
         type: 'image',
         content: uploadedImage.url,
-        timestamp: Date.now(),
+        timestamp: Date.now() - 1,
         isUser: true
       }
-      setMessages(prev => [...prev, imageMessage])
+      messagesToAdd.push(imageMessage)
     }
+    
+    messagesToAdd.push(userMessage)
+    setMessages(prev => [...prev, ...messagesToAdd])
 
     // 显示AI正在处理的消息
     setShowTyping(true)
@@ -378,12 +514,17 @@ export default function Workspace() {
       // 调用API创建任务
       const requestData: any = {
         prompt: inputText.trim() || '生成图片',
-        objectKey: "uploads/a5d30ab5-ab0d-422f-b930-db9e4a9a782a/2.jpg"
+        style: modalParams.style
       }
       
-      // 如果有上传的图片，添加objectKey
-      if (uploadedImage?.objectKey) {
-        requestData.objectKey = uploadedImage.objectKey
+      // 如果有上传的图片，添加imageUrl
+      if (uploadedImage?.url) {
+        // 开发环境使用固定的线上图片URL
+        if (process.env.NODE_ENV === 'development') {
+          requestData.imageUrl = 'https://n.sinaimg.cn/sinakd20120/287/w894h993/20230131/6128-b0868578421793c38d18b1e229624512.jpg'
+        } else {
+          requestData.imageUrl = uploadedImage.url
+        }
       }
 
       console.log('创建任务请求数据:', requestData)
@@ -396,12 +537,7 @@ export default function Workspace() {
         {
           onConnected: (data) => {
             console.log('SSE连接已建立:', data)
-            // 更新处理消息显示连接状态
-            setMessages(prev => prev.map(msg => 
-              msg.id === processingMessage.id 
-                ? { ...msg, content: '已连接到任务状态流，正在处理...' }
-                : msg
-            ))
+            // 不显示连接状态消息，直接保持原有的处理状态
           },
           onStatusUpdate: (data) => {
             handleStatusUpdate(data, processingMessage.id)
@@ -424,6 +560,9 @@ export default function Workspace() {
       // 清空输入数据
       setInputText('')
       setUploadedImage(null)
+      
+      // 关闭弹窗
+      handleModalClose()
       
     } catch (error) {
       console.error('发送消息失败:', error)
@@ -451,11 +590,39 @@ export default function Workspace() {
   }
 
   // 处理图片预览
-  const handleImagePreview = (url: string): void => {
+  const handleImagePreview = (url: string, messageId: string): void => {
+    // 其他情况正常预览
     Taro.previewImage({
       urls: [url],
       current: url
     })
+  }
+
+  // 处理demo卡片点击
+  const handleDemoCardClick = (messageId: string): void => {
+    // 如果是demo卡片消息，自动填充参数并打开弹窗
+    if (messageId.includes('demo-card')) {
+      const message = messages.find(msg => msg.id === messageId)
+      if (message && message.demoData) {
+        // 创建示例图片对象
+        const exampleImage: UploadedImage = {
+          id: 'demo-' + Date.now().toString(),
+          url: demoExample?.imageUrl || '',
+          name: '示例图片.jpg',
+          size: 2048000, // 模拟大小 2MB
+          width: 1024,
+          height: 1024,
+          uploadTime: Date.now()
+        }
+        
+        // 设置图片和文本
+        setUploadedImage(exampleImage)
+        setInputText(message.demoData.prompt)
+        
+        // 打开弹窗
+        setShowModal(true)
+      }
+    }
   }
 
   // 处理状态更新事件
@@ -575,6 +742,44 @@ export default function Workspace() {
     })
   }
 
+  // 处理悬浮按钮点击
+  const handleFloatingButtonClick = () => {
+    setShowModal(true)
+  }
+
+  // 处理弹窗关闭
+  const handleModalClose = () => {
+    setIsModalClosing(true)
+    // 等待动画完成后关闭弹窗
+    setTimeout(() => {
+      setShowModal(false)
+      setIsModalClosing(false)
+      // 清空弹窗内容
+      setInputText('')
+      setUploadedImage(null)
+      setUploadProgress(0)
+      setIsUploading(false)
+    }, 300) // 与 CSS 动画时间一致
+  }
+
+  // 处理参数输入变化
+  const handleParamChange = (key: string, value: any) => {
+    setModalParams(prev => ({
+      ...prev,
+      [key]: value
+    }))
+  }
+
+  // 处理参数确认
+  const handleParamConfirm = () => {
+    console.log('应用参数:', modalParams)
+    Taro.showToast({
+      title: '参数已应用',
+      icon: 'success'
+    })
+    setShowModal(false)
+  }
+
   return (
     <View className='workspace'>
       {/* 头部LOGO */}
@@ -595,57 +800,6 @@ export default function Workspace() {
 
       {/* 主要内容区域 */}
       <View className='main-content'>
-        {/* 欢迎卡片 */}
-        <View className='welcome-card'>
-          <View className='card-header'>
-            <View className='purple-icon'>✏️</View>
-            <View className='welcome-text'>
-              <Text className='greeting'>你好！😄</Text>
-              <Text className='description'>
-                只需要<Text className='highlight'>上传一张图片🏞</Text>，然后描述你想要的<Text className='highlight-blue'>动画效果✨</Text>，我就能为你生成精彩的动图！
-              </Text>
-            </View>
-          </View>
-
-          {/* 功能特点 */}
-          <View className='features'>
-            <View className='feature-item'>
-              <Text className='feature-icon'>💡</Text>
-              <Text className='feature-text'>支持人物动作、物体移动、特效添加等多种动画类型</Text>
-            </View>
-          </View>
-
-          {/* 示例演示 */}
-          <View className='example-demo'>
-            {isLoadingDemo ? (
-              <View className='demo-loading'>
-                <Text className='loading-text'>加载示例中...</Text>
-              </View>
-            ) : demoExample ? (
-              <View className='demo-container' onClick={handleUseExample}>
-                <Image 
-                  className='demo-image'
-                  src={demoExample.prevVideoUrl}
-                  mode='aspectFit'
-                />
-                <View className='demo-overlay'>
-                  <View className='play-button'>
-                    <Text className='play-icon'>▶</Text>
-                  </View>
-                </View>
-              </View>
-            ) : (
-              <View className='demo-error'>
-                <Text className='error-text'>示例加载失败</Text>
-                <Button className='retry-btn' onClick={loadDemoExample}>重试</Button>
-              </View>
-            )}
-            
-            {demoExample && (
-              <Text className='example-prompt'>{demoExample.prompt}</Text>
-            )}
-          </View>
-        </View>
 
         {/* 聊天消息区域 */}
         {messages.length > 0 && (
@@ -657,20 +811,79 @@ export default function Workspace() {
               >
                 {!message.isUser && (
                   <View className='ai-avatar'>
-                    <Text className='ai-icon'>✨</Text>
+                    <Image 
+                      className='avatar-image'
+                      src={require('../../assets/robot-avatar.png')}
+                      mode='aspectFit'
+                    />
                   </View>
                 )}
                 
                 <View className={`message-bubble ${message.isUser ? 'chat-bubble-right' : 'chat-bubble-left'}`}>
                   {message.type === 'text' ? (
                     <Text className='bubble-text'>{message.content}</Text>
+                  ) : message.type === 'demo-card' ? (
+                    <View className='demo-card' onClick={() => handleDemoCardClick(message.id)}>
+                      <Text className='demo-card-title'>{message.content}</Text>
+                      <View className='demo-video-container'>
+                        <Video 
+                          className='demo-video' 
+                          src={videoSources[message.demoData?.videoUrl || ''] || message.demoData?.videoUrl || ''} 
+                          poster={demoExample?.imageUrl || ''}
+                          controls={false}
+                          autoplay={true}
+                          loop={true}
+                          muted={true}
+                          showPlayBtn={false}
+                          showCenterPlayBtn={false}
+                          showProgress={false}
+                          showFullscreenBtn={false}
+                          objectFit='contain'
+                          onPlay={() => console.log('Demo video started playing')}
+                          onError={(e) => {
+                            console.error('Demo video error:', e)
+                            // 如果视频加载失败，尝试重新加载
+                            if (message.demoData?.videoUrl && !videoSources[message.demoData.videoUrl]) {
+                              createVideoUrl(message.demoData.videoUrl).then(url => {
+                                setVideoSources(prev => ({
+                                  ...prev,
+                                  [message.demoData!.videoUrl]: url
+                                }))
+                              })
+                            }
+                          }}
+                          onLoadedData={() => {
+                            console.log('Demo video loaded successfully')
+                            // 视频加载成功储会自动播放（由于autoplay=true）
+                          }}
+                        />
+                        <View className='demo-play-overlay' onClick={() => {
+                          const videoElement = document.querySelector(`video[src*="${message.demoData?.videoUrl?.split('/').pop()}"]`) as HTMLVideoElement
+                          if (videoElement) {
+                            if (videoElement.paused) {
+                              videoElement.play().catch(e => console.log('Manual play prevented:', e))
+                            } else {
+                              videoElement.pause()
+                            }
+                          }
+                        }}>
+                          <View className='demo-play-button'>
+                            <Text className='demo-play-icon'>▶</Text>
+                          </View>
+                        </View>
+                      </View>
+                      <Text className='demo-prompt'>{message.demoData?.prompt}</Text>
+                      <View className='demo-action-hint'>
+                        <Text className='demo-hint-text'>👆 点击卡片快速体验</Text>
+                      </View>
+                    </View>
                   ) : (
                     <View className='bubble-image-container'>
                       <Image 
                         className='bubble-image' 
                         src={message.content} 
                         mode='aspectFit'
-                        onClick={() => handleImagePreview(message.content)}
+                        onClick={() => handleImagePreview(message.content, message.id)}
                       />
                     </View>
                   )}
@@ -678,7 +891,15 @@ export default function Workspace() {
 
                 {message.isUser && (
                   <View className='user-avatar'>
-                    <Text className='user-icon'>👤</Text>
+                    {userState.user?.userAvatar ? (
+                      <Image 
+                        className='avatar-image'
+                        src={userState.user.userAvatar}
+                        mode='aspectFit'
+                      />
+                    ) : (
+                      <Text className='user-icon'>👤</Text>
+                    )}
                   </View>
                 )}
               </View>
@@ -688,7 +909,11 @@ export default function Workspace() {
             {showTyping && (
               <View className='message-wrapper ai-message-wrapper ai-typing-message'>
                 <View className='ai-avatar'>
-                  <Text className='ai-icon'>✨</Text>
+                  <Image 
+                    className='avatar-image'
+                    src={require('../../assets/robot-avatar.png')}
+                    mode='aspectFit'
+                  />
                 </View>
                 <View className='message-bubble chat-bubble-left'>
                   <View className='ai-input-indicator'>
@@ -705,67 +930,133 @@ export default function Workspace() {
         )}
       </View>
 
-      {/* 直接输入区域 */}
-      <View className='input-container'>
-        {/* 图片上传区域 */}
-        <View className='upload-section'>
-          <View 
-            ref={uploadAreaRef}
-            className={`upload-zone ${uploadedImage ? 'has-image' : ''} ${isDragOver ? 'dragover' : ''}`}
-            onClick={handleChooseImage}
-          >
-            {!uploadedImage ? (
-              <View className='upload-placeholder'>
-                <Text className='upload-icon-text'>📁</Text>
-                <Text className='upload-title'>点击上传图片</Text>
-              </View>
-            ) : (
-              <View className='uploaded-display'>
-                <Image 
-                  className='uploaded-image-display'
-                  src={uploadedImage.url}
-                  mode='aspectFit'
-                />
-                <View className='remove-uploaded' onClick={handleRemoveImage}>
-                  <Text>×</Text>
+
+      {/* 悬浮按钮 */}
+      <View 
+        className='floating-button'
+        onClick={handleFloatingButtonClick}
+      >
+        <Image 
+          className='floating-button-icon'
+          src={require('../../assets/button.png')}
+          mode='aspectFit'
+        />
+      </View>
+
+      {/* 参数设置弹窗 */}
+      {showModal && (
+        <View className='modal-overlay' onClick={handleModalClose}>
+          <View className={`modal-content ${isModalClosing ? 'closing' : ''}`} onClick={(e) => e.stopPropagation()}>
+            
+            <View className='modal-body'>
+              {/* 图片上传区域 */}
+              <View className='param-group'>
+                <Text className='param-label'>上传图片</Text>
+                <View 
+                  className={`modal-upload-zone ${uploadedImage ? 'has-image' : ''}`}
+                  onClick={handleChooseImage}
+                >
+                  {!uploadedImage ? (
+                    <View className='modal-upload-placeholder'>
+                      <View className='modal-upload-icon'>
+                        <Text>📁</Text>
+                      </View>
+                      <Text className='modal-upload-text'>点击上传或拖拽图片到此处</Text>
+                      <Text className='modal-upload-hint'>支持 JPG、PNG 格式</Text>
+                      <Text className='modal-upload-hint'>宽高范围：300×300 ~ 3000×3000</Text>
+                      <Text className='modal-upload-hint'>图片大小不超过10M</Text>
+                    </View>
+                  ) : (
+                    <View className='modal-uploaded-display'>
+                      <Image 
+                        className='modal-uploaded-image'
+                        src={uploadedImage.url}
+                        mode='aspectFit'
+                      />
+                      <View className='modal-remove-image' onClick={handleRemoveImage}>
+                        <Text>×</Text>
+                      </View>
+                    </View>
+                  )}
+                  
+                  {/* 图片信息显示 */}
+                  {uploadedImage && (
+                    <View className='modal-image-info'>
+                      <Text className='image-info-text'>
+                        尺寸: {uploadedImage.width || '未知'} × {uploadedImage.height || '未知'} | 
+                        大小: {uploadedImage.size > 0 ? (uploadedImage.size / 1024 / 1024).toFixed(2) + 'MB' : '未知'}
+                      </Text>
+                    </View>
+                  )}
                 </View>
               </View>
-            )}
+
+              {/* 上传进度 */}
+              {isUploading && uploadProgress > 0 && (
+                <View className='modal-upload-progress'>
+                  <Progress 
+                    percent={uploadProgress} 
+                    strokeWidth={3}
+                    color='#4A90E2'
+                    backgroundColor='#E5E5EA'
+                  />
+                  <Text className='modal-progress-text'>{uploadProgress}%</Text>
+                </View>
+              )}
+
+              {/* 文本输入框 */}
+              <View className='param-group'>
+                <View className='param-label-container'>
+                  <Text className='param-label'>动画描述</Text>
+                  <Text className='char-counter'>{inputText.length}/300</Text>
+                </View>
+                <Textarea
+                  className='modal-text-input'
+                  value={inputText}
+                  onInput={handleInputChange}
+                  placeholder='描述你想要的动画效果...'
+                  placeholderClass='modal-input-placeholder'
+                  autoHeight
+                  maxlength={300}
+                  showConfirmBar={false}
+                />
+              </View>
+
+              {/* 样式选择 */}
+              {generateConfig && (
+                <View className='param-group'>
+                  <Text className='param-label'>动画风格</Text>
+                  <View className='param-options'>
+                    {Object.entries(generateConfig.styles).map(([label, value]) => (
+                      <View 
+                        key={value}
+                        className={`param-option ${modalParams.style === value ? 'active' : ''}`}
+                        onClick={() => handleParamChange('style', value)}
+                      >
+                        <Text className='option-text'>{label}</Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              )}
+            </View>
+
+            <View className='modal-footer'>
+              <Button className='modal-confirm modal-single-button' onClick={handleSendMessage}>
+                <Text className='modal-confirm-text'>生成</Text>
+                <View className='modal-cost-info'>
+                  <Text className='modal-cost-amount'>-100</Text>
+                  <Image 
+                    className='modal-currency-icon'
+                    src={require('../../assets/currency.png')}
+                    mode='aspectFit'
+                  />
+                </View>
+              </Button>
+            </View>
           </View>
         </View>
-
-        {/* 上传进度 */}
-        {isUploading && uploadProgress > 0 && (
-          <View className='upload-progress'>
-            <Progress 
-              percent={uploadProgress} 
-              strokeWidth={3}
-              color='#4A90E2'
-              backgroundColor='#E5E5EA'
-            />
-            <Text className='progress-text'>{uploadProgress}%</Text>
-          </View>
-        )}
-
-        {/* 文本输入区域 */}
-        <View className='text-input-section'>
-          <Input
-            ref={inputRef}
-            className='text-input'
-            value={inputText}
-            onInput={handleInputChange}
-            placeholder='描述你想要的动画效果...'
-            placeholderClass='input-placeholder'
-          />
-          <Button 
-            className='send-button'
-            onClick={handleSendMessage}
-            disabled={!inputText.trim() && !uploadedImage}
-          >
-            发送
-          </Button>
-        </View>
-      </View>
+      )}
     </View>
   )
 }

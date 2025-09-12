@@ -58,7 +58,24 @@ export interface DemoExample {
   style: string
 }
 
+// 生成配置类型
+export interface GenerateConfig {
+  styles: Record<string, string>
+}
+
 export class GenerateService {
+  /**
+   * 获取生成配置选项
+   */
+  static async getGenerateConfig(): Promise<GenerateConfig> {
+    try {
+      return await RequestService.get<GenerateConfig>('/generate/config');
+    } catch (error) {
+      console.error('获取生成配置失败:', error)
+      throw new Error('获取配置失败，请稍后重试')
+    }
+  }
+
   /**
    * 获取demo示例
    */
