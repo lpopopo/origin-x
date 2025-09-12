@@ -14,8 +14,8 @@ export default defineAppConfig({
   tabBar: {
     color: '#808080',
     selectedColor: '#667eea',
-    borderStyle: 'black',
-    backgroundColor: '#1e1e1e',
+    borderStyle: 'white',
+    backgroundColor: '#ffffff',
     list: [
       {
         pagePath: 'pages/workspace/index',
