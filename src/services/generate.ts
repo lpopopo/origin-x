@@ -58,12 +58,41 @@ export interface DemoExample {
   style: string
 }
 
+// 生成配置类型
+export interface GenerateConfig {
+  styles: Record<string, string>
+}
+
 export class GenerateService {
+  /**
+   * 获取生成配置选项
+   */
+  static async getGenerateConfig(): Promise<GenerateConfig> {
+    try {
+      return await RequestService.get<GenerateConfig>('/generate/config');
+    } catch (error) {
+      console.error('获取生成配置失败:', error)
+      throw new Error('获取配置失败，请稍后重试')
+    }
+  }
+
   /**
    * 获取demo示例
    */
   static async getDemoExample(): Promise<DemoExample> {
     try {
+      // 开发环境mock数据
+      if (process.env.NODE_ENV === 'development') {
+        console.log('DEV模式: 使用mock demo示例')
+        await new Promise(resolve => setTimeout(resolve, 300)) // 模拟网络延迟
+        return {
+          imageUrl: 'https://img.52725.uno/demo.jpeg',
+          prevVideoUrl: 'https://img.52725.uno/demo.mp4',
+          prompt: '欢快的跳起舞来',
+          style: 'style-b'
+        }
+      }
+      
       return await RequestService.get<DemoExample>('/generate/demo');
     } catch (error) {
       console.error('获取demo示例失败:', error)
@@ -76,6 +105,19 @@ export class GenerateService {
    */
   static async createTask(request: GenerateTaskRequest): Promise<GenerateTaskResponse> {
     try {
+      // 开发环境mock数据
+      if (process.env.NODE_ENV === 'development') {
+        console.log('DEV模式: 使用mock任务创建响应')
+        await new Promise(resolve => setTimeout(resolve, 500)) // 模拟网络延迟
+        return {
+          message: 'Task created successfully',
+          progress: 0,
+          sseUrl: `https://52725.uno/api/v1/sse/tasks/mock-task-id/stream`,
+          status: 'pending',
+          taskId: 'mock-task-' + Date.now()
+        }
+      }
+      
       return await RequestService.post<GenerateTaskResponse>('/generate', request);
     } catch (error) {
       console.error('创建生成任务失败:', error)
@@ -96,6 +138,94 @@ export class GenerateService {
       onConnectionError?: (error: Error) => void
     }
   ): () => void {
+    
+    // 开发环境mock SSE流
+    if (process.env.NODE_ENV === 'development') {
+      console.log('DEV模式: 使用mock SSE流')
+      
+      let isCancelled = false
+      
+      // 模拟SSE事件序列
+      const mockSSESequence = async () => {
+        if (isCancelled) return
+        
+        // 1. 连接成功
+        setTimeout(() => {
+          if (!isCancelled) {
+            callbacks.onConnected?.({ event: 'connected', message: 'Connected to mock SSE' })
+          }
+        }, 100)
+        
+        // 2. 状态更新 - 处理中 0%
+        setTimeout(() => {
+          if (!isCancelled) {
+            callbacks.onStatusUpdate?.({
+              taskId,
+              status: 'processing',
+              progress: 0
+            })
+          }
+        }, 500)
+        
+        // 3. 状态更新 - 处理中 25%
+        setTimeout(() => {
+          if (!isCancelled) {
+            callbacks.onStatusUpdate?.({
+              taskId,
+              status: 'processing',
+              progress: 25
+            })
+          }
+        }, 1500)
+        
+        // 4. 状态更新 - 处理中 50%
+        setTimeout(() => {
+          if (!isCancelled) {
+            callbacks.onStatusUpdate?.({
+              taskId,
+              status: 'processing',
+              progress: 50
+            })
+          }
+        }, 2500)
+        
+        // 5. 状态更新 - 处理中 75%
+        setTimeout(() => {
+          if (!isCancelled) {
+            callbacks.onStatusUpdate?.({
+              taskId,
+              status: 'processing',
+              progress: 75
+            })
+          }
+        }, 3500)
+        
+        // 6. 完成
+        setTimeout(() => {
+          if (!isCancelled) {
+            callbacks.onFinished?.({
+              taskId,
+              status: 'completed',
+              progress: 100,
+              gifUrl: 'https://img.52725.uno/generated/2fc1c828-9e18-408e-a1eb-033154ff3a4a/f19121ec.gif',
+              gifFileSize: 2048000, // 2MB
+              gifWidth: 512,
+              gifHeight: 512,        
+              actualDuration: 3
+            })
+          }
+        }, 4500)
+      }
+      
+      // 启动mock序列
+      mockSSESequence()
+      
+      // 返回清理函数
+      return () => {
+        isCancelled = true
+        console.log('DEV模式: mock SSE已取消')
+      }
+    }
     try {
       // 使用 x-request 工具函数创建 SSE 连接
       const xRequest = XRequest({
