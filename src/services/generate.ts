@@ -51,7 +51,26 @@ export interface TaskErrorEvent {
   error: string
 }
 
+export interface DemoExample {
+  imageUrl: string
+  prevVideoUrl: string
+  prompt: string
+  style: string
+}
+
 export class GenerateService {
+  /**
+   * 获取demo示例
+   */
+  static async getDemoExample(): Promise<DemoExample> {
+    try {
+      return await RequestService.get<DemoExample>('/generate/demo');
+    } catch (error) {
+      console.error('获取demo示例失败:', error)
+      throw new Error('获取示例失败，请稍后重试')
+    }
+  }
+
   /**
    * 创建生成任务
    */
