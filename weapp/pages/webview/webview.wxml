@@ -1,0 +1,10 @@
+<view class="webview-container">
+  <view class="loading-info" wx:if="{{showDebug}}">
+    <text>正在加载: {{h5Url}}</text>
+    <button bindtap="toggleDebug" size="mini">隐藏调试</button>
+  </view>
+  <view class="debug-toggle" wx:else>
+    <button bindtap="toggleDebug" size="mini">显示调试</button>
+  </view>
+  <web-view src="{{h5Url}}" bindmessage="handleMessage" binderror="handleError" bindload="handleLoad"></web-view>
+</view>

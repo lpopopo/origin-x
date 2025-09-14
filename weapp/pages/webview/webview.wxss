@@ -1,0 +1,32 @@
+.webview-container {
+  width: 100%;
+  height: 100vh;
+  position: relative;
+}
+
+.loading-info {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 10rpx;
+  font-size: 24rpx;
+  z-index: 1000;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.debug-toggle {
+  position: absolute;
+  top: 10rpx;
+  right: 10rpx;
+  z-index: 1000;
+}
+
+web-view {
+  width: 100%;
+  height: 100%;
+}

@@ -1,0 +1,23 @@
+{
+  "pages": [
+    "pages/webview/webview"
+  ],
+  "window": {
+    "navigationBarTitleText": "Origin X",
+    "navigationBarBackgroundColor": "#000000",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#ffffff"
+  },
+  "permission": {
+    "scope.userLocation": {
+      "desc": "你的位置信息将用于小程序位置接口的效果展示"
+    }
+  },
+  "requiredPrivateInfos": [
+    "getLocation"
+  ],
+  "networkTimeout": {
+    "request": 60000,
+    "downloadFile": 60000
+  }
+}
