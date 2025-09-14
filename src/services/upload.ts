@@ -5,7 +5,7 @@ import { RequestService } from '../utils/request';
 // 获取上传URL的接口响应类型
 interface UploadUrlResponse {
     uploadUrl: string;
-    objectKey: string;
+    imageUrl: string;
 }
 
 // 上传进度回调类型
@@ -203,7 +203,7 @@ export class UploadService {
     filePath: string | File, 
     filename: string,
     onProgress?: UploadProgressCallback
-  ): Promise<{ imageUrl: string; objectKey: string }> {
+  ): Promise<{ imageUrl: string; uploadUrl: string }> {
     try {
         // 1. 验证文件类型
         if (!this.isValidImageFile(filePath)) {
@@ -221,17 +221,14 @@ export class UploadService {
 
         // 3. 获取上传地址
         const uploadConfig = await this.getUploadUrl(filename) 
-        const { uploadUrl, objectKey } = uploadConfig
+      const { uploadUrl, imageUrl } = uploadConfig
 
         // 4. 上传图片到图床
         await this.uploadImageToBed(uploadUrl, filePath, filename, onProgress);
         
-        // 5. 构建最终的图片访问URL（去掉查询参数）
-        const imageUrl = uploadUrl.split('?')[0];
-        
         return {
           imageUrl,
-          objectKey
+          uploadUrl
         };
     } catch (error) {
       console.error('图片上传流程失败:', error);

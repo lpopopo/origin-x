@@ -109,11 +109,11 @@ export class GenerateService {
               
               switch (eventType) {
                 case 'connected':
-                  console.log('收到connected事件:', chunk)
+                  console.log('收到connected事件:', data)
                   callbacks.onConnected?.(chunk)
                   break
                 case 'status':
-                  console.log('收到status事件:', chunk)
+                  console.log('收到status事件:', data)
                   // 将 SSE 数据转换为 TaskStatusEvent 类型
                   const statusEvent: TaskStatusEvent = {
                     taskId: data?.taskId || taskId,
@@ -123,7 +123,7 @@ export class GenerateService {
                   callbacks.onStatusUpdate?.(statusEvent)
                   break
                 case 'finished':
-                  console.log('收到finished事件:', chunk)
+                  console.log('收到finished事件:', data)
                   // 将 SSE 数据转换为 TaskFinishedEvent 类型
                   const finishedEvent: TaskFinishedEvent = {
                     taskId: data?.taskId || taskId,

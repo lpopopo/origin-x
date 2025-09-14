@@ -108,22 +108,20 @@ export default function Workspace() {
         // 上传进度回调
         const onProgress = (progress: number) => {
           setUploadProgress(progress)
-        }
-        
+        }        
         // 上传图片到图床
-        const { imageUrl, objectKey } = await UploadService.uploadImage(
+        const { imageUrl, uploadUrl } = await UploadService.uploadImage(
           file, 
           file.name, 
           onProgress
         )
-        
         // 创建图片对象
         const newImage: UploadedImage = {
           id: Date.now().toString(),
           url: imageUrl,
           name: file.name,
           size: file.size,
-          objectKey: objectKey,
+          objectKey: uploadUrl,
           uploadTime: Date.now()
         }
         
@@ -211,7 +209,7 @@ export default function Workspace() {
           }
           
           // 上传图片到图床
-          const { imageUrl, objectKey } = await UploadService.uploadImage(
+          const { imageUrl, uploadUrl } = await UploadService.uploadImage(
             localPath, 
             fileName, 
             onProgress
@@ -223,7 +221,7 @@ export default function Workspace() {
             url: imageUrl,
             name: fileName,
             size: fileSize,
-            objectKey: objectKey,
+            objectKey: uploadUrl,
             uploadTime: Date.now()
           }
           
@@ -322,12 +320,12 @@ export default function Workspace() {
       // 调用API创建任务
       const requestData: any = {
         prompt: inputText.trim() || '生成图片',
-        objectKey: "uploads/a5d30ab5-ab0d-422f-b930-db9e4a9a782a/2.jpg"
+        imageUrl: "uploads/a5d30ab5-ab0d-422f-b930-db9e4a9a782a/2.jpg"
       }
       
       // 如果有上传的图片，添加objectKey
-      if (uploadedImage?.objectKey) {
-        requestData.objectKey = uploadedImage.objectKey
+      if (uploadedImage?.url) {
+        requestData.imageUrl = uploadedImage.url
       }
 
       console.log('创建任务请求数据:', requestData)
