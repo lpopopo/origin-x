@@ -159,6 +159,7 @@ export function UserProvider({ children, requireAuth = true, routeWhitelist = []
         }
     };
 
+
     // 应用启动时检查用户状态
     useEffect(() => {
         checkAuthAndRedirect();

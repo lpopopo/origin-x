@@ -54,3 +54,32 @@ export interface EmailVerificationParams {
   token: string;
   email: string;
 }
+
+// 用户历史记录相关类型
+export interface UserWork {
+  id: number;
+  userId: string;
+  workId: string;
+  originalImageUrl: string;
+  generatedImageUrl: string;
+  prompt: string;
+  model: string;
+  likes: number;
+  views: number;
+  quotes: number;
+  isPublic: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UserWorksResponse {
+  works: UserWork[];
+  total: number;
+  pageNo: number;
+  pageSize: number;
+}
+
+export interface UserWorksParams {
+  pageNo?: number;
+  pageSize?: number;
+}
