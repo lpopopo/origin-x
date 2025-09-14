@@ -10,7 +10,7 @@ import './index.less'
 // 定义消息类型
 interface Message {
   id: string
-  type: 'text' | 'image' | 'demo-card'
+  type: 'text' | 'image' | 'demo-card' | 'loading'
   content: string
   timestamp: number
   isUser: boolean
@@ -40,20 +40,14 @@ export default function Workspace() {
   const [uploadProgress, setUploadProgress] = useState<number>(0)
   const [cleanupFunction, setCleanupFunction] = useState<(() => void) | null>(null)
   const [isProcessing, setIsProcessing] = useState<boolean>(false) // 是否正在处理任务
-  const [showTyping, setShowTyping] = useState<boolean>(false)
   const [isDragOver, setIsDragOver] = useState<boolean>(false)
   const [demoExample, setDemoExample] = useState<DemoExample | null>(null)
   const [isLoadingDemo, setIsLoadingDemo] = useState<boolean>(false)
   const [generateConfig, setGenerateConfig] = useState<GenerateConfig | null>(null)
-  const [showModal, setShowModal] = useState<boolean>(false)
-  const [isModalClosing, setIsModalClosing] = useState<boolean>(false)
-  const [modalParams, setModalParams] = useState({
-    style: 'default',
-    duration: 3,
-    fps: 30,
-    quality: 'high'
-  })
-  const [videoSources, setVideoSources] = useState<{[key: string]: string}>({})
+  const [tabBarHeight, setTabBarHeight] = useState<number>(50) // tabBar高度
+  const [inputOptions, setInputOptions] = useState<string[]>([]) // 输入选项
+  const [selectedStyle, setSelectedStyle] = useState<string>('default') // 选中的风格
+  const [showStyleDropdown, setShowStyleDropdown] = useState<boolean>(false) // 是否显示风格下拉框
   const uploadAreaRef = useRef<any>(null)
   const inputRef = useRef<any>(null)
   const buttonRef = useRef<any>(null)
@@ -62,6 +56,8 @@ export default function Workspace() {
     console.log('Workspace page loaded.')
     loadDemoExample()
     loadGenerateConfig()
+    loadInputOptions()
+    getTabBarHeight()
     
     // 添加机器人欢迎消息
     const welcomeMessage: Message = {
@@ -74,22 +70,156 @@ export default function Workspace() {
     setMessages([welcomeMessage])
   })
 
+  // 获取tabBar高度
+  const getTabBarHeight = (): void => {
+    try {
+      // 获取系统信息
+      Taro.getSystemInfo({
+        success: (res) => {
+          console.log('系统信息:', res)
+          let calculatedHeight = 50 // 默认高度
+          
+          if (Taro.getEnv() === Taro.ENV_TYPE.WEAPP) {
+            // 微信小程序环境
+            const safeAreaInsetBottom = res.safeArea ? res.screenHeight - res.safeArea.bottom : 0
+            calculatedHeight = res.platform === 'ios' ? 49 + safeAreaInsetBottom : 50
+          } else if (Taro.getEnv() === Taro.ENV_TYPE.WEB) {
+            // H5环境，可以通过DOM查询
+            setTimeout(() => {
+              // 尝试多种选择器来查找tabBar
+              const tabBarSelectors = [
+                '.taro-tabbar__tabbar',
+                '.taro-tabbar',
+                '[role="tablist"]',
+                '.tabbar'
+              ]
+              
+              let tabBar = null
+              for (const selector of tabBarSelectors) {
+                tabBar = document.querySelector(selector)
+                if (tabBar) break
+              }
+              
+              if (tabBar) {
+                const rect = tabBar.getBoundingClientRect()
+                calculatedHeight = rect.height
+                setTabBarHeight(calculatedHeight)
+                console.log('检测到的tabBar高度:', calculatedHeight, 'selector:', tabBar.className)
+                
+                // 同时更新主内容区域的padding
+                updateMainContentPadding(calculatedHeight)
+              } else {
+                console.log('未找到tabBar元素，使用默认高度')
+                setTabBarHeight(50)
+                updateMainContentPadding(50)
+              }
+            }, 300) // 增加延迟确保DOM完全渲染
+            return
+          }
+          
+          setTabBarHeight(calculatedHeight)
+          updateMainContentPadding(calculatedHeight)
+          console.log('计算的tabBar高度:', calculatedHeight)
+        },
+        fail: () => {
+          console.log('获取系统信息失败，使用默认tabBar高度')
+          setTabBarHeight(50)
+          updateMainContentPadding(50)
+        }
+      })
+    } catch (error) {
+      console.error('获取tabBar高度失败:', error)
+      setTabBarHeight(50)
+      updateMainContentPadding(50)
+    }
+  }
+
+  // 更新主内容区域的padding
+  const updateMainContentPadding = (tabBarHeight: number): void => {
+    const inputAreaHeight = 140 // 估算的输入区域高度
+    const totalBottomSpace = inputAreaHeight + tabBarHeight
+    
+    // 动态设置CSS变量或直接修改样式
+    if (typeof document !== 'undefined') {
+      document.documentElement.style.setProperty('--tabbar-height', `${tabBarHeight}px`)
+      document.documentElement.style.setProperty('--input-area-bottom-space', `${totalBottomSpace}px`)
+    }
+  }
+
+  // 加载输入选项
+  const loadInputOptions = async (): Promise<void> => {
+    try {
+      // 这里应该调用实际的API接口
+      // const options = await SomeService.getInputOptions()
+      
+      // 暂时使用模拟数据
+      const mockOptions = [
+        '让头发飘动',
+        '眼睛眨动', 
+        '微笑',
+        '点头',
+        '招手',
+        '背景特效'
+      ]
+      setInputOptions(mockOptions)
+      console.log('输入选项加载成功:', mockOptions)
+    } catch (error) {
+      console.error('加载输入选项失败:', error)
+      // 使用默认选项
+      setInputOptions(['让头发飘动', '眼睛眨动', '微笑'])
+    }
+  }
+
+  // 处理选项点击
+  const handleOptionClick = (option: string): void => {
+    // 将选项添加到输入文本中
+    const currentText = inputText.trim()
+    const newText = currentText ? `${currentText}，${option}` : option
+    setInputText(newText)
+  }
+
+  // 处理风格选择
+  const handleStyleSelect = (styleValue: string): void => {
+    setSelectedStyle(styleValue)
+    setShowStyleDropdown(false)
+  }
+
+  // 获取当前选中风格的显示名称
+  const getSelectedStyleLabel = (): string => {
+    if (!generateConfig?.styles) return '默认风格'
+    
+    const entries = Object.entries(generateConfig.styles)
+    const found = entries.find(([_, value]) => value === selectedStyle)
+    return found ? found[0] : '默认风格'
+  }
+
   // 加载生成配置
   const loadGenerateConfig = async (): Promise<void> => {
     try {
       const config = await GenerateService.getGenerateConfig()
       setGenerateConfig(config)
+      
+      // 如果当前没有选中的风格，自动选择第一个
+      if (config.styles && Object.keys(config.styles).length > 0) {
+        const firstStyleValue = Object.values(config.styles)[0]
+        if (selectedStyle === 'default' || !Object.values(config.styles).includes(selectedStyle)) {
+          setSelectedStyle(firstStyleValue)
+        }
+      }
+      
       console.log('生成配置加载成功:', config)
     } catch (error) {
       console.error('加载生成配置失败:', error)
-      // 使用默认配置
-      setGenerateConfig({
+      // 使用默认配置作为后备
+      const fallbackConfig = {
         styles: {
-          '默认风格': 'default',
-          '卡通风格': 'cartoon',
-          '写实风格': 'realistic'
+          '默认风格': 'default'
         }
-      })
+      }
+      setGenerateConfig(fallbackConfig)
+      
+      // 设置默认选中第一个风格
+      setSelectedStyle('default')
     }
   }
 
@@ -99,13 +229,6 @@ export default function Workspace() {
       setIsLoadingDemo(true)
       const demo = await GenerateService.getDemoExample()
       setDemoExample(demo)
-      
-      // 预加载视频URL
-      const videoUrl = await createVideoUrl(demo.prevVideoUrl)
-      setVideoSources(prev => ({
-        ...prev,
-        [demo.prevVideoUrl]: videoUrl
-      }))
       
       // 添加demo卡片消息到聊天
       const demoCardMessage: Message = {
@@ -156,30 +279,6 @@ export default function Workspace() {
   // 检测当前环境
   const isH5 = Taro.getEnv() === Taro.ENV_TYPE.WEB
 
-  // 处理视频URL的函数，添加必要的headers
-  const createVideoUrl = async (originalUrl: string): Promise<string> => {
-    if (!isH5 || !originalUrl) return originalUrl
-    
-    try {
-      // 在H5环境下，通过fetch获取视频内容并创建blob URL
-      const response = await fetch(originalUrl, {
-        headers: {
-          'Accept': 'video/mp4,video/*,*/*;q=0.9',
-          'Referer': window.location.origin
-        }
-      })
-      
-      if (response.ok) {
-        const blob = await response.blob()
-        const blobUrl = URL.createObjectURL(blob)
-        return blobUrl
-      }
-    } catch (error) {
-      console.warn('Failed to load video with headers, falling back to direct URL:', error)
-    }
-    
-    return originalUrl
-  }
 
   // 启用拖拽上传（仅H5环境）
   useEffect(() => {
@@ -193,20 +292,14 @@ export default function Workspace() {
     }
   }, [isH5, uploadAreaRef.current])
 
-  // 组件卸载时清理SSE连接和视频blob URLs
+  // 组件卸载时清理SSE连接
   useEffect(() => {
     return () => {
       if (cleanupFunction) {
         cleanupFunction()
       }
-      // 清理所有blob URLs
-      Object.values(videoSources).forEach(url => {
-        if (url.startsWith('blob:')) {
-          URL.revokeObjectURL(url)
-        }
-      })
     }
-  }, [cleanupFunction, videoSources])
+  }, [cleanupFunction])
 
   // 处理拖拽上传
   const handleDragAndDrop = async (files: File[]): Promise<void> => {
@@ -254,7 +347,7 @@ export default function Workspace() {
       }
       
       // 检查文件大小
-      const maxSize = 10 * 1024 * 1024 // 10MB
+      const maxSize = 20 * 1024 * 1024 // 20MB
       if (!H5UploadUtils.checkFileSize(file, maxSize)) {
         throw new Error(`文件大小不能超过${H5UploadUtils.formatFileSize(maxSize)}`)
       }
@@ -453,9 +546,17 @@ export default function Workspace() {
 
   // 处理发送消息
   const handleSendMessage = async (): Promise<void> => {
-    if (!inputText.trim() && !uploadedImage) {
+    if (!inputText.trim()) {
       Taro.showToast({
-        title: '请输入文字描述或上传图片',
+        title: '请输入动画描述文字',
+        icon: 'none'
+      })
+      return
+    }
+    
+    if (!uploadedImage) {
+      Taro.showToast({
+        title: '请上传图片',
         icon: 'none'
       })
       return
@@ -477,7 +578,7 @@ export default function Workspace() {
     const userMessage: Message = {
       id: Date.now().toString(),
       type: 'text',
-      content: inputText.trim() || '生成图片',
+      content: inputText.trim(),
       timestamp: Date.now(),
       isUser: true
     }
@@ -499,12 +600,11 @@ export default function Workspace() {
     messagesToAdd.push(userMessage)
     setMessages(prev => [...prev, ...messagesToAdd])
 
-    // 显示AI正在处理的消息
-    setShowTyping(true)
+    // 显示AI正在处理的消息（只显示动画，不显示文本）
     const processingMessage: Message = {
       id: (Date.now() + 2).toString(),
-      type: 'text',
-      content: '正在处理您的请求...',
+      type: 'loading',
+      content: '',
       timestamp: Date.now(),
       isUser: false
     }
@@ -513,8 +613,8 @@ export default function Workspace() {
     try {
       // 调用API创建任务
       const requestData: any = {
-        prompt: inputText.trim() || '生成图片',
-        style: modalParams.style
+        prompt: inputText.trim(),
+        style: selectedStyle
       }
       
       // 如果有上传的图片，添加imageUrl
@@ -561,31 +661,27 @@ export default function Workspace() {
       setInputText('')
       setUploadedImage(null)
       
-      // 关闭弹窗
-      handleModalClose()
-      
     } catch (error) {
       console.error('发送消息失败:', error)
       
-      // 更新处理消息为错误状态
-      setMessages(prev => prev.map(msg => 
-        msg.id === processingMessage.id 
-          ? { ...msg, content: `处理失败: ${error instanceof Error ? error.message : '未知错误'}` }
-          : msg
-      ))
-      
-      Taro.showToast({
-        title: '发送失败，请重试',
-        icon: 'none'
-      })
-      
       // 重置处理状态
       setIsProcessing(false)
+      
+      // 移除加载消息
+      setMessages(prev => prev.filter(msg => msg.id !== processingMessage.id))
+      
+      // 显示错误提示
+      const errorMessage = error instanceof Error ? error.message : '发送失败，请重试'
+      Taro.showToast({
+        title: errorMessage,
+        icon: 'error'
+      })
     }
   }
 
   // 移除上传的图片
-  const handleRemoveImage = (): void => {
+  const handleRemoveImage = (e: any): void => {
+    e.stopPropagation() // 阻止事件冒泡，避免触发上传
     setUploadedImage(null)
   }
 
@@ -600,7 +696,7 @@ export default function Workspace() {
 
   // 处理demo卡片点击
   const handleDemoCardClick = (messageId: string): void => {
-    // 如果是demo卡片消息，自动填充参数并打开弹窗
+    // 如果是demo卡片消息，自动填充参数到输入组件
     if (messageId.includes('demo-card')) {
       const message = messages.find(msg => msg.id === messageId)
       if (message && message.demoData) {
@@ -615,12 +711,17 @@ export default function Workspace() {
           uploadTime: Date.now()
         }
         
-        // 设置图片和文本
+        // 直接设置图片和文本到输入组件
         setUploadedImage(exampleImage)
         setInputText(message.demoData.prompt)
         
-        // 打开弹窗
-        setShowModal(true)
+        // 滚动到输入区域（可选）
+        setTimeout(() => {
+          const inputArea = document.querySelector('.input-area')
+          if (inputArea) {
+            inputArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+          }
+        }, 100)
       }
     }
   }
@@ -651,12 +752,13 @@ export default function Workspace() {
   const handleTaskFinished = (data: any, messageId: string) => {
     const { status, gifUrl, error, errorCode, gifFileSize, gifWidth, gifHeight, actualDuration } = data
     console.log('任务完成:', data)
+    console.log('status:', status, 'gifUrl:', gifUrl)
     
-    // 隐藏typing动画并重置处理状态
-    setShowTyping(false)
+    // 重置处理状态
     setIsProcessing(false)
     
     if (status === 'completed' && gifUrl) {
+      console.log('生成成功，显示GIF:', gifUrl)
       // 任务成功完成，显示生成的GIF
       const successMessage: Message = {
         id: (Date.now() + 3).toString(),
@@ -667,10 +769,13 @@ export default function Workspace() {
       }
       
       // 移除处理消息，添加成功消息
-      setMessages(prev => [
-        ...prev.filter(msg => msg.id !== messageId),
-        successMessage
-      ])
+      setMessages(prev => {
+        console.log('更新消息列表，移除messageId:', messageId, '添加新消息:', successMessage)
+        return [
+          ...prev.filter(msg => msg.id !== messageId),
+          successMessage
+        ]
+      })
       
       // 显示成功提示，包含文件信息
       const fileInfo = `生成完成！文件大小: ${(gifFileSize / 1024 / 1024).toFixed(2)}MB, 尺寸: ${gifWidth}x${gifHeight}, 时长: ${actualDuration}秒`
@@ -681,6 +786,7 @@ export default function Workspace() {
       
       console.log(fileInfo)
     } else if (status === 'failed') {
+      console.log('生成失败:', error)
       // 任务失败
       const errorMessage = error || '生成失败'
       const errorDetails = errorCode ? ` (错误代码: ${errorCode})` : ''
@@ -688,7 +794,7 @@ export default function Workspace() {
       // 更新处理消息为失败状态
       setMessages(prev => prev.map(msg => 
         msg.id === messageId 
-          ? { ...msg, content: `生成失败: ${errorMessage}${errorDetails}` }
+          ? { ...msg, content: `生成失败: ${errorMessage}${errorDetails}`, type: 'text' }
           : msg
       ))
       
@@ -696,6 +802,8 @@ export default function Workspace() {
         title: '生成失败',
         icon: 'none'
       })
+    } else {
+      console.log('未知状态或缺少gifUrl:', status, gifUrl)
     }
   }
 
@@ -704,8 +812,7 @@ export default function Workspace() {
     const { error } = data
     console.error('SSE错误:', error)
     
-    // 隐藏typing动画并重置处理状态
-    setShowTyping(false)
+    // 重置处理状态
     setIsProcessing(false)
     
     // 更新处理消息为错误状态
@@ -725,8 +832,7 @@ export default function Workspace() {
   const handleConnectionError = (error: Error, messageId: string) => {
     console.error('SSE连接错误:', error)
     
-    // 隐藏typing动画并重置处理状态
-    setShowTyping(false)
+    // 重置处理状态
     setIsProcessing(false)
     
     // 更新处理消息为错误状态
@@ -742,43 +848,6 @@ export default function Workspace() {
     })
   }
 
-  // 处理悬浮按钮点击
-  const handleFloatingButtonClick = () => {
-    setShowModal(true)
-  }
-
-  // 处理弹窗关闭
-  const handleModalClose = () => {
-    setIsModalClosing(true)
-    // 等待动画完成后关闭弹窗
-    setTimeout(() => {
-      setShowModal(false)
-      setIsModalClosing(false)
-      // 清空弹窗内容
-      setInputText('')
-      setUploadedImage(null)
-      setUploadProgress(0)
-      setIsUploading(false)
-    }, 300) // 与 CSS 动画时间一致
-  }
-
-  // 处理参数输入变化
-  const handleParamChange = (key: string, value: any) => {
-    setModalParams(prev => ({
-      ...prev,
-      [key]: value
-    }))
-  }
-
-  // 处理参数确认
-  const handleParamConfirm = () => {
-    console.log('应用参数:', modalParams)
-    Taro.showToast({
-      title: '参数已应用',
-      icon: 'success'
-    })
-    setShowModal(false)
-  }
 
   return (
     <View className='workspace'>
@@ -811,10 +880,23 @@ export default function Workspace() {
               >
                 {!message.isUser && (
                   <View className='ai-avatar'>
-                    <Image 
+                    <Image
                       className='avatar-image'
                       src={require('../../assets/robot-avatar.png')}
                       mode='aspectFit'
+                      onError={(e) => {
+                        console.error('Robot avatar loading failed')
+                        // 用小图标替换失败的机器人头像
+                        const imgElement = e.currentTarget
+                        if (imgElement && imgElement.parentElement) {
+                          imgElement.style.display = 'none'
+                          const fallbackIcon = document.createElement('text')
+                          fallbackIcon.textContent = '🖼️'
+                          fallbackIcon.style.fontSize = '16px'
+                          fallbackIcon.style.textAlign = 'center'
+                          imgElement.parentElement.appendChild(fallbackIcon)
+                        }
+                      }}
                     />
                   </View>
                 )}
@@ -822,41 +904,83 @@ export default function Workspace() {
                 <View className={`message-bubble ${message.isUser ? 'chat-bubble-right' : 'chat-bubble-left'}`}>
                   {message.type === 'text' ? (
                     <Text className='bubble-text'>{message.content}</Text>
+                  ) : message.type === 'loading' ? (
+                    <View className='ai-input-indicator'>
+                      <View className='ai-circle small'></View>
+                      <View className='ai-circle medium'></View>
+                      <View className='ai-circle large'></View>
+                      <View className='ai-circle medium'></View>
+                      <View className='ai-circle small'></View>
+                    </View>
                   ) : message.type === 'demo-card' ? (
                     <View className='demo-card' onClick={() => handleDemoCardClick(message.id)}>
                       <Text className='demo-card-title'>{message.content}</Text>
                       <View className='demo-video-container'>
-                        <Video 
-                          className='demo-video' 
-                          src={videoSources[message.demoData?.videoUrl || ''] || message.demoData?.videoUrl || ''} 
-                          poster={demoExample?.imageUrl || ''}
-                          controls={false}
-                          autoplay={true}
-                          loop={true}
-                          muted={true}
-                          showPlayBtn={false}
-                          showCenterPlayBtn={false}
-                          showProgress={false}
-                          showFullscreenBtn={false}
-                          objectFit='contain'
-                          onPlay={() => console.log('Demo video started playing')}
-                          onError={(e) => {
-                            console.error('Demo video error:', e)
-                            // 如果视频加载失败，尝试重新加载
-                            if (message.demoData?.videoUrl && !videoSources[message.demoData.videoUrl]) {
-                              createVideoUrl(message.demoData.videoUrl).then(url => {
-                                setVideoSources(prev => ({
-                                  ...prev,
-                                  [message.demoData!.videoUrl]: url
-                                }))
-                              })
-                            }
-                          }}
-                          onLoadedData={() => {
-                            console.log('Demo video loaded successfully')
-                            // 视频加载成功储会自动播放（由于autoplay=true）
-                          }}
-                        />
+{isH5 ? (
+                          <>
+                            <video 
+                              className='demo-video' 
+                              src={message.demoData?.videoUrl || ''} 
+                              poster={demoExample?.imageUrl || ''}
+                              autoPlay
+                              loop
+                              muted
+                              playsInline
+                              style={{
+                                width: '100%',
+                                height: '180px',
+                                objectFit: 'cover'
+                              }}
+                              onLoadedData={() => {
+                                console.log('Demo video loaded successfully')
+                              }}
+                              onError={(e) => {
+                                console.error('Demo video error:', e)
+                                console.error('Video URL:', message.demoData?.videoUrl)
+                                console.error('Poster URL:', demoExample?.imageUrl)
+                                // 隐藏video元素，显示fallback
+                                const videoElement = e.target as HTMLVideoElement
+                                if (videoElement) {
+                                  videoElement.style.display = 'none'
+                                  const fallbackElement = videoElement.parentElement?.querySelector('.demo-video-fallback') as HTMLDivElement
+                                  if (fallbackElement) {
+                                    fallbackElement.style.display = 'flex'
+                                  }
+                                }
+                              }}
+                            />
+                            <View
+                              className='demo-video-fallback'
+                              style={{
+                                width: '100%',
+                                height: '180px',
+                                display: 'none',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                backgroundColor: '#f5f5f5',
+                                borderRadius: '8px'
+                              }}
+                            >
+                              <Text className='fallback-icon'>🖼️</Text>
+                            </View>
+                          </>
+                        ) : (
+                          <Video 
+                            className='demo-video' 
+                            src={message.demoData?.videoUrl || ''} 
+                            poster={demoExample?.imageUrl || ''}
+                            controls={false}
+                            autoplay={true}
+                            loop={true}
+                            muted={true}
+                            showPlayBtn={false}
+                            showCenterPlayBtn={false}
+                            showProgress={false}
+                            showFullscreenBtn={false}
+                            objectFit='contain'
+                          />
+                        )}
                         <View className='demo-play-overlay' onClick={() => {
                           const videoElement = document.querySelector(`video[src*="${message.demoData?.videoUrl?.split('/').pop()}"]`) as HTMLVideoElement
                           if (videoElement) {
@@ -879,12 +1003,62 @@ export default function Workspace() {
                     </View>
                   ) : (
                     <View className='bubble-image-container'>
-                      <Image 
-                        className='bubble-image' 
-                        src={message.content} 
-                        mode='aspectFit'
-                        onClick={() => handleImagePreview(message.content, message.id)}
-                      />
+                      {isH5 ? (
+                        <>
+                          <img
+                            className='bubble-image'
+                            src={message.content}
+                            alt='Generated image'
+                            style={{
+                              width: '100%',
+                              maxHeight: '300px',
+                              objectFit: 'contain',
+                              cursor: 'pointer'
+                            }}
+                            onClick={() => handleImagePreview(message.content, message.id)}
+                            onError={(e) => {
+                              console.error('Image loading failed:', message.content)
+                              // 隐藏原图片，显示fallback元素
+                              const imgElement = e.target as HTMLImageElement
+                              if (imgElement) {
+                                imgElement.style.display = 'none'
+                                const fallbackElement = imgElement.nextElementSibling as HTMLDivElement
+                                if (fallbackElement) {
+                                  fallbackElement.style.display = 'flex'
+                                }
+                              }
+                            }}
+                          />
+                          <View
+                            className='bubble-image-fallback'
+                            style={{ display: 'none' }}
+                            onClick={() => handleImagePreview(message.content, message.id)}
+                          >
+                            <Text className='fallback-icon'>🖼️</Text>
+                          </View>
+                        </>
+                      ) : (
+                        <Image
+                          className='bubble-image'
+                          src={message.content}
+                          mode='aspectFit'
+                          onClick={() => handleImagePreview(message.content, message.id)}
+                          onError={() => {
+                            console.error('Image loading failed:', message.content)
+                            // 小程序环境：将Image组件替换为小图标显示
+                            const imgElement = e.currentTarget
+                            if (imgElement && imgElement.parentElement) {
+                              imgElement.style.display = 'none'
+                              // 创建fallback图标
+                              const fallbackIcon = document.createElement('text')
+                              fallbackIcon.textContent = '🖼️'
+                              fallbackIcon.style.fontSize = '20px'
+                              fallbackIcon.style.textAlign = 'center'
+                              imgElement.parentElement.appendChild(fallbackIcon)
+                            }
+                          }}
+                        />
+                      )}
                     </View>
                   )}
                 </View>
@@ -892,10 +1066,23 @@ export default function Workspace() {
                 {message.isUser && (
                   <View className='user-avatar'>
                     {userState.user?.userAvatar ? (
-                      <Image 
+                      <Image
                         className='avatar-image'
                         src={userState.user.userAvatar}
                         mode='aspectFit'
+                        onError={(e) => {
+                          console.error('User avatar loading failed:', userState.user?.userAvatar)
+                          // 用小图标替换失败的用户头像
+                          const imgElement = e.currentTarget
+                          if (imgElement && imgElement.parentElement) {
+                            imgElement.style.display = 'none'
+                            const fallbackIcon = document.createElement('text')
+                            fallbackIcon.textContent = '🖼️'
+                            fallbackIcon.style.fontSize = '16px'
+                            fallbackIcon.style.textAlign = 'center'
+                            imgElement.parentElement.appendChild(fallbackIcon)
+                          }
+                        }}
                       />
                     ) : (
                       <Text className='user-icon'>👤</Text>
@@ -905,158 +1092,106 @@ export default function Workspace() {
               </View>
             ))}
 
-            {/* AI输入动画效果 */}
-            {showTyping && (
-              <View className='message-wrapper ai-message-wrapper ai-typing-message'>
-                <View className='ai-avatar'>
-                  <Image 
-                    className='avatar-image'
-                    src={require('../../assets/robot-avatar.png')}
-                    mode='aspectFit'
-                  />
-                </View>
-                <View className='message-bubble chat-bubble-left'>
-                  <View className='ai-input-indicator'>
-                    <View className='ai-circle small'></View>
-                    <View className='ai-circle medium'></View>
-                    <View className='ai-circle large'></View>
-                    <View className='ai-circle medium'></View>
-                    <View className='ai-circle small'></View>
-                  </View>
-                </View>
-              </View>
-            )}
           </View>
         )}
       </View>
 
 
-      {/* 悬浮按钮 */}
-      <View 
-        className='floating-button'
-        onClick={handleFloatingButtonClick}
-      >
-        <Image 
-          className='floating-button-icon'
-          src={require('../../assets/button.png')}
-          mode='aspectFit'
-        />
-      </View>
-
-      {/* 参数设置弹窗 */}
-      {showModal && (
-        <View className='modal-overlay' onClick={handleModalClose}>
-          <View className={`modal-content ${isModalClosing ? 'closing' : ''}`} onClick={(e) => e.stopPropagation()}>
-            
-            <View className='modal-body'>
-              {/* 图片上传区域 */}
-              <View className='param-group'>
-                <Text className='param-label'>上传图片</Text>
-                <View 
-                  className={`modal-upload-zone ${uploadedImage ? 'has-image' : ''}`}
-                  onClick={handleChooseImage}
-                >
-                  {!uploadedImage ? (
-                    <View className='modal-upload-placeholder'>
-                      <View className='modal-upload-icon'>
-                        <Text>📁</Text>
-                      </View>
-                      <Text className='modal-upload-text'>点击上传或拖拽图片到此处</Text>
-                      <Text className='modal-upload-hint'>支持 JPG、PNG 格式</Text>
-                      <Text className='modal-upload-hint'>宽高范围：300×300 ~ 3000×3000</Text>
-                      <Text className='modal-upload-hint'>图片大小不超过10M</Text>
+      {/* 输入区域 */}
+      <View className='input-area' style={{ bottom: `${tabBarHeight}px` }}>
+        <View className='input-container'>
+          <View className='input-card'>
+            {/* 主输入区域 - 横向布局 */}
+            <View className='input-main-section'>
+              {/* 左侧图片上传按钮/图片显示区域 - 3:4比例长矩形 */}
+              <View className='image-upload-btn' onClick={handleChooseImage}>
+                {uploadedImage ? (
+                  <View className='uploaded-image-container'>
+                    <Image
+                      className='uploaded-image-display'
+                      src={uploadedImage.url}
+                      mode='aspectFit'
+                      onError={(e) => {
+                        console.error('Uploaded image display failed:', uploadedImage.url)
+                        // 用小图标替换失败的上传图片预览
+                        const imgElement = e.currentTarget
+                        if (imgElement && imgElement.parentElement) {
+                          imgElement.style.display = 'none'
+                          const fallbackIcon = document.createElement('text')
+                          fallbackIcon.textContent = '🖼️'
+                          fallbackIcon.style.fontSize = '16px'
+                          fallbackIcon.style.textAlign = 'center'
+                          fallbackIcon.style.display = 'flex'
+                          fallbackIcon.style.alignItems = 'center'
+                          fallbackIcon.style.justifyContent = 'center'
+                          fallbackIcon.style.width = '100%'
+                          fallbackIcon.style.height = '100%'
+                          imgElement.parentElement.appendChild(fallbackIcon)
+                        }
+                      }}
+                    />
+                    <View className='remove-image-btn' onClick={handleRemoveImage}>
+                      <Text className='remove-image-icon'>×</Text>
                     </View>
-                  ) : (
-                    <View className='modal-uploaded-display'>
-                      <Image 
-                        className='modal-uploaded-image'
-                        src={uploadedImage.url}
-                        mode='aspectFit'
-                      />
-                      <View className='modal-remove-image' onClick={handleRemoveImage}>
-                        <Text>×</Text>
-                      </View>
-                    </View>
-                  )}
-                  
-                  {/* 图片信息显示 */}
-                  {uploadedImage && (
-                    <View className='modal-image-info'>
-                      <Text className='image-info-text'>
-                        尺寸: {uploadedImage.width || '未知'} × {uploadedImage.height || '未知'} | 
-                        大小: {uploadedImage.size > 0 ? (uploadedImage.size / 1024 / 1024).toFixed(2) + 'MB' : '未知'}
-                      </Text>
-                    </View>
-                  )}
-                </View>
+                  </View>
+                ) : (
+                  <Text className='upload-plus-icon'>+</Text>
+                )}
               </View>
-
-              {/* 上传进度 */}
-              {isUploading && uploadProgress > 0 && (
-                <View className='modal-upload-progress'>
-                  <Progress 
-                    percent={uploadProgress} 
-                    strokeWidth={3}
-                    color='#4A90E2'
-                    backgroundColor='#E5E5EA'
-                  />
-                  <Text className='modal-progress-text'>{uploadProgress}%</Text>
-                </View>
-              )}
-
-              {/* 文本输入框 */}
-              <View className='param-group'>
-                <View className='param-label-container'>
-                  <Text className='param-label'>动画描述</Text>
-                  <Text className='char-counter'>{inputText.length}/300</Text>
-                </View>
+              
+              {/* 中间文本输入区域 */}
+              <View className='text-input-wrapper'>
                 <Textarea
-                  className='modal-text-input'
+                  className='main-text-input'
                   value={inputText}
                   onInput={handleInputChange}
                   placeholder='描述你想要的动画效果...'
-                  placeholderClass='modal-input-placeholder'
-                  autoHeight
+                  placeholderClass='main-text-placeholder'
                   maxlength={300}
                   showConfirmBar={false}
+                  autoHeight={false}
                 />
               </View>
-
-              {/* 样式选择 */}
-              {generateConfig && (
-                <View className='param-group'>
-                  <Text className='param-label'>动画风格</Text>
-                  <View className='param-options'>
-                    {Object.entries(generateConfig.styles).map(([label, value]) => (
-                      <View 
-                        key={value}
-                        className={`param-option ${modalParams.style === value ? 'active' : ''}`}
-                        onClick={() => handleParamChange('style', value)}
-                      >
-                        <Text className='option-text'>{label}</Text>
-                      </View>
-                    ))}
-                  </View>
-                </View>
-              )}
             </View>
-
-            <View className='modal-footer'>
-              <Button className='modal-confirm modal-single-button' onClick={handleSendMessage}>
-                <Text className='modal-confirm-text'>生成</Text>
-                <View className='modal-cost-info'>
-                  <Text className='modal-cost-amount'>-100</Text>
-                  <Image 
-                    className='modal-currency-icon'
-                    src={require('../../assets/currency.png')}
-                    mode='aspectFit'
-                  />
+            
+            {/* 底部风格选择和发送按钮区域 */}
+            <View className='input-bottom-section'>
+              <View className='style-selector-wrapper'>
+                <View className='style-dropdown' onClick={() => setShowStyleDropdown(!showStyleDropdown)}>
+                  <Text className='style-selected'>{getSelectedStyleLabel()}</Text>
+                  <Text className='dropdown-arrow'>{showStyleDropdown ? '▲' : '▼'}</Text>
+                  
+                  {/* 向上弹出的选项列表 */}
+                  {showStyleDropdown && generateConfig?.styles && (
+                    <View className='style-options'>
+                      {Object.entries(generateConfig.styles).map(([label, value]) => (
+                        <View 
+                          key={value}
+                          className={`style-option ${selectedStyle === value ? 'selected' : ''}`}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleStyleSelect(value)
+                          }}
+                        >
+                          <Text className='style-option-text'>{label}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  )}
                 </View>
-              </Button>
+              </View>
+              
+              {/* 发送按钮 */}
+              <View className='send-button-wrapper'>
+                <View className='function-btn send-btn' onClick={handleSendMessage}>
+                  <Text className='function-btn-icon'>➤</Text>
+                </View>
+              </View>
             </View>
           </View>
         </View>
-      )}
+      </View>
+
     </View>
   )
 }

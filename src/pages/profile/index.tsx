@@ -17,10 +17,28 @@ export default function Profile() {
     <View className='profile'>
       <View className='profile-header'>
         <View className='avatar-container'>
-          <Image 
-            className='avatar' 
-            src={state.user?.userAvatar || 'https://via.placeholder.com/80x80'} 
+          <Image
+            className='avatar'
+            src={state.user?.userAvatar || 'https://via.placeholder.com/80x80'}
             mode='aspectFill'
+            onError={(e) => {
+              console.error('Avatar loading failed:', state.user?.userAvatar)
+              // 用小图标替换失败的头像
+              const imgElement = e.currentTarget
+              if (imgElement && imgElement.parentElement) {
+                imgElement.style.display = 'none'
+                const fallbackIcon = document.createElement('text')
+                fallbackIcon.textContent = '🖼️'
+                fallbackIcon.style.fontSize = '20px'
+                fallbackIcon.style.textAlign = 'center'
+                fallbackIcon.style.display = 'flex'
+                fallbackIcon.style.alignItems = 'center'
+                fallbackIcon.style.justifyContent = 'center'
+                fallbackIcon.style.width = '100%'
+                fallbackIcon.style.height = '100%'
+                imgElement.parentElement.appendChild(fallbackIcon)
+              }
+            }}
           />
         </View>
         <View className='user-info'>
@@ -33,7 +51,24 @@ export default function Profile() {
         <View className='balance-item' onClick={() => showToast({ title: '1RMB=100猫爪', icon: 'none' })}>
           <View className='balance-left'>
             <View className='balance-icon-container'>
-              <Image className='currency-icon' src={currency} mode='aspectFit' />
+              <Image
+                className='currency-icon'
+                src={currency}
+                mode='aspectFit'
+                onError={(e) => {
+                  console.error('Currency icon loading failed')
+                  // 用小图标替换失败的货币图标
+                  const imgElement = e.currentTarget
+                  if (imgElement && imgElement.parentElement) {
+                    imgElement.style.display = 'none'
+                    const fallbackIcon = document.createElement('text')
+                    fallbackIcon.textContent = '🖼️'
+                    fallbackIcon.style.fontSize = '16px'
+                    fallbackIcon.style.textAlign = 'center'
+                    imgElement.parentElement.appendChild(fallbackIcon)
+                  }
+                }}
+              />
             </View>
             <View className='balance-info'>
               <Text className='balance-label'>猫币余额</Text>
