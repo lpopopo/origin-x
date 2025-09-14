@@ -137,7 +137,7 @@ export function UserProvider({ children, requireAuth = true, routeWhitelist = []
         // 获取当前路由
         const currentPages = Taro.getCurrentPages();
         const currentPage = currentPages[currentPages.length - 1];
-        const currentRoute = currentPage?.route;
+        const currentRoute = currentPage && currentPage.route;
         console.log('currentRoute', currentRoute);
 
         // 如果当前路由在白名单中，跳过登录校验

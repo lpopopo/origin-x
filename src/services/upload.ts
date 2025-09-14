@@ -262,7 +262,7 @@ export class UploadService {
     }
 
     // 返回本地示例图片路径
-    const imageUrl = require('../assets/example.jpg');
+    const imageUrl = 'https://img.52725.uno/assets/example.jpg';
     console.log('✅ Mock上传完成，图片地址:', imageUrl);
     
     return {

@@ -13,10 +13,10 @@ export class WorksService {
   static async getUserWorks(params?: UserWorksParams): Promise<UserWorksResponse> {
     const queryParams = new URLSearchParams();
     
-    if (params?.pageNo) {
+    if (params && params.pageNo) {
       queryParams.append('pageNo', params.pageNo.toString());
     }
-    if (params?.pageSize) {
+    if (params && params.pageSize) {
       queryParams.append('pageSize', params.pageSize.toString());
     }
     

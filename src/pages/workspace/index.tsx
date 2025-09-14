@@ -186,7 +186,7 @@ export default function Workspace() {
 
   // 获取当前选中风格的显示名称
   const getSelectedStyleLabel = (): string => {
-    if (!generateConfig?.styles) return '默认风格'
+    if (!generateConfig || !generateConfig.styles) return '默认风格'
     
     const entries = Object.entries(generateConfig.styles)
     const found = entries.find(([_, value]) => value === selectedStyle)
@@ -454,10 +454,10 @@ export default function Workspace() {
           throw new Error('未选择图片')
         }
 
-        const file = tempFiles?.[0]
+        const file = tempFiles && tempFiles[0]
         const localPath = tempFilePaths[0]
-        const fileName = file?.originalFileObj?.name || `image_${Date.now()}.jpg`
-        const fileSize = file?.size || 0
+        const fileName = (file && file.originalFileObj && file.originalFileObj.name) || `image_${Date.now()}.jpg`
+        const fileSize = (file && file.size) || 0
         
         // 小程序环境获取图片信息
         const imageInfo = await new Promise<{width: number, height: number}>((resolve, reject) => {
@@ -616,7 +616,7 @@ export default function Workspace() {
       }
       
       // 如果有上传的图片，添加imageUrl
-      if (uploadedImage?.url) {
+      if (uploadedImage && uploadedImage.url) {
         // 开发环境使用固定的线上图片URL
         if (process.env.NODE_ENV === 'development') {
           requestData.imageUrl = 'https://n.sinaimg.cn/sinakd20120/287/w894h993/20230131/6128-b0868578421793c38d18b1e229624512.jpg'
@@ -701,7 +701,7 @@ export default function Workspace() {
         // 创建示例图片对象
         const exampleImage: UploadedImage = {
           id: 'demo-' + Date.now().toString(),
-          url: demoExample?.imageUrl || '',
+          url: (demoExample && demoExample.imageUrl) || '',
           name: '示例图片.jpg',
           size: 2048000, // 模拟大小 2MB
           width: 1024,
@@ -880,7 +880,7 @@ export default function Workspace() {
                   <View className='ai-avatar'>
                     <Image
                       className='avatar-image'
-                      src={require('../../assets/robot-avatar.png')}
+                      src='https://img.52725.uno/assets/robot-avatar.png'
                       mode='aspectFit'
                       onError={(e) => {
                         console.error('Robot avatar loading failed')
@@ -918,8 +918,8 @@ export default function Workspace() {
                           <>
                             <video 
                               className='demo-video' 
-                              src={message.demoData?.videoUrl || ''} 
-                              poster={demoExample?.imageUrl || ''}
+                              src={(message.demoData && message.demoData.videoUrl) || ''} 
+                              poster={(demoExample && demoExample.imageUrl) || ''}
                               autoPlay
                               loop
                               muted
@@ -934,13 +934,13 @@ export default function Workspace() {
                               }}
                               onError={(e) => {
                                 console.error('Demo video error:', e)
-                                console.error('Video URL:', message.demoData?.videoUrl)
-                                console.error('Poster URL:', demoExample?.imageUrl)
+                                console.error('Video URL:', message.demoData && message.demoData.videoUrl)
+                                console.error('Poster URL:', demoExample && demoExample.imageUrl)
                                 // 隐藏video元素，显示fallback
                                 const videoElement = e.target as HTMLVideoElement
                                 if (videoElement) {
                                   videoElement.style.display = 'none'
-                                  const fallbackElement = videoElement.parentElement?.querySelector('.demo-video-fallback') as HTMLDivElement
+                                  const fallbackElement = (videoElement.parentElement && videoElement.parentElement.querySelector('.demo-video-fallback')) as HTMLDivElement
                                   if (fallbackElement) {
                                     fallbackElement.style.display = 'flex'
                                   }
@@ -966,8 +966,8 @@ export default function Workspace() {
                         ) : (
                           <Video 
                             className='demo-video' 
-                            src={message.demoData?.videoUrl || ''} 
-                            poster={demoExample?.imageUrl || ''}
+                            src={(message.demoData && message.demoData.videoUrl) || ''} 
+                            poster={(demoExample && demoExample.imageUrl) || ''}
                             controls={false}
                             autoplay={true}
                             loop={true}
@@ -980,7 +980,7 @@ export default function Workspace() {
                           />
                         )}
                         <View className='demo-play-overlay' onClick={() => {
-                          const videoElement = document.querySelector(`video[src*="${message.demoData?.videoUrl?.split('/').pop()}"]`) as HTMLVideoElement
+                          const videoElement = document.querySelector(`video[src*="${message.demoData && message.demoData.videoUrl && message.demoData.videoUrl.split('/').pop()}"]`) as HTMLVideoElement
                           if (videoElement) {
                             if (videoElement.paused) {
                               videoElement.play().catch(e => console.log('Manual play prevented:', e))
@@ -994,7 +994,7 @@ export default function Workspace() {
                           </View>
                         </View>
                       </View>
-                      <Text className='demo-prompt'>{message.demoData?.prompt}</Text>
+                      <Text className='demo-prompt'>{message.demoData && message.demoData.prompt}</Text>
                       <View className='demo-action-hint'>
                         <Text className='demo-hint-text'>👆 点击卡片快速体验</Text>
                       </View>
@@ -1063,13 +1063,13 @@ export default function Workspace() {
 
                 {message.isUser && (
                   <View className='user-avatar'>
-                    {userState.user?.userAvatar ? (
+                    {(userState.user && userState.user.userAvatar) ? (
                       <Image
                         className='avatar-image'
                         src={userState.user.userAvatar}
                         mode='aspectFit'
                         onError={(e) => {
-                          console.error('User avatar loading failed:', userState.user?.userAvatar)
+                          console.error('User avatar loading failed:', userState.user && userState.user.userAvatar)
                           // 用小图标替换失败的用户头像
                           const imgElement = e.currentTarget
                           if (imgElement && imgElement.parentElement) {
@@ -1096,7 +1096,7 @@ export default function Workspace() {
 
 
       {/* 输入区域 */}
-      <View className='input-area' style={{ bottom: `${tabBarHeight}px` }}>
+      <View className='input-area' style={{ bottom: isH5 ? `${tabBarHeight}px` : `${tabBarHeight - 50}px` }}>
         <View className='input-container'>
           <View className='input-card'>
             {/* 主输入区域 - 横向布局 */}
@@ -1160,7 +1160,7 @@ export default function Workspace() {
                   <Text className='dropdown-arrow'>{showStyleDropdown ? '▲' : '▼'}</Text>
                   
                   {/* 向上弹出的选项列表 */}
-                  {showStyleDropdown && generateConfig?.styles && (
+                  {showStyleDropdown && generateConfig && generateConfig.styles && (
                     <View className='style-options'>
                       {Object.entries(generateConfig.styles).map(([label, value]) => (
                         <View 

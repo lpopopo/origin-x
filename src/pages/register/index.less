@@ -43,6 +43,18 @@
   font-size: @font-size-2xl;
 }
 
+.app-title {
+  font-size: @font-size-3xl;
+  font-weight: @font-weight-bold;
+  color: @primary-color;
+  text-align: center;
+  margin-bottom: @spacing-lg;
+  background: @primary-gradient;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
 .register-title {
   font-size: @font-size-2xl;
   font-weight: @font-weight-bold;
@@ -58,6 +70,13 @@
 
 .form-item {
   margin-bottom: @spacing-lg;
+
+  &.password-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
 }
 
 .form-label {
@@ -88,10 +107,51 @@
     border-color: @border-accent;
     box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
   }
-  
+
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+  }
+
+  &.password-input {
+    padding-right: 65px;
+  }
+
+  &.verification-input {
+    width: 100%;
+  }
+}
+
+.password-toggle {
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 48px;
+  width: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: @transition-normal;
+  border-radius: 0 @border-radius-md @border-radius-md 0;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.05);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+.toggle-icon {
+  font-size: 12px;
+  color: @text-secondary;
+  transition: @transition-normal;
+  user-select: none;
+
+  .password-toggle:hover & {
+    color: @text-primary;
   }
 }
 
@@ -185,18 +245,20 @@
   font-weight: @font-weight-medium;
   cursor: pointer;
   transition: @transition-normal;
-  margin-top: @spacing-sm;
-  
+  margin-top: @spacing-md;
+
   &:hover:not(:disabled) {
     background: @bg-tertiary;
     border-color: @border-secondary;
     color: @text-primary;
+    transform: translateY(-1px);
+    box-shadow: @shadow-sm;
   }
-  
+
   &:active {
-    transform: scale(0.98);
+    transform: translateY(0);
   }
-  
+
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
@@ -204,16 +266,74 @@
   }
 }
 
+
+.countdown-display {
+  text-align: center;
+  margin: @spacing-md 0;
+  padding: @spacing-sm @spacing-md;
+  background: rgba(255, 193, 7, 0.1);
+  border-radius: @border-radius-md;
+  border: 1px solid @warning-color;
+}
+
+.countdown-text {
+  color: #d4b106;
+  font-size: @font-size-sm;
+  font-weight: @font-weight-medium;
+}
+
+.resend-section {
+  text-align: center;
+  margin: @spacing-md 0;
+  padding: @spacing-sm;
+}
+
+.resend-hint {
+  color: @text-secondary;
+  font-size: @font-size-sm;
+  margin-bottom: @spacing-xs;
+  display: block;
+}
+
+.resend-link-button {
+  background: transparent;
+  border: none;
+  color: @primary-color;
+  font-size: @font-size-sm;
+  font-weight: @font-weight-medium;
+  cursor: pointer;
+  padding: @spacing-xs @spacing-sm;
+  border-radius: @border-radius-sm;
+  transition: @transition-normal;
+
+  &:hover:not(:disabled) {
+    background: rgba(74, 144, 226, 0.1);
+    color: @secondary-color;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
 .back-link {
-  margin-top: @spacing-lg;
+  margin-top: @spacing-md;
   text-align: center;
   color: @text-tertiary;
   font-size: @font-size-sm;
   cursor: pointer;
   transition: @transition-normal;
-  
+  padding: @spacing-sm;
+  border-radius: @border-radius-sm;
+
   &:hover {
     color: @text-secondary;
+    background: rgba(0, 0, 0, 0.05);
+  }
+
+  &:active {
+    transform: scale(0.98);
   }
 }
 
@@ -255,6 +375,19 @@
   .input {
     height: 96px;
     font-size: @font-size-3xl;
+
+    &.password-input {
+      padding-right: 80px;
+    }
+  }
+
+  .password-toggle {
+    height: 96px;
+    width: 80px;
+
+    .toggle-icon {
+      font-size: 16px;
+    }
   }
   
   .register-button {
@@ -264,7 +397,14 @@
   }
   
   .secondary-button {
-    height: 44px;
-    font-size: @font-size-base;
+    height: 56px;
+    font-size: @font-size-lg;
   }
+
+  .back-link {
+    font-size: @font-size-base;
+    padding: @spacing-md;
+  }
+
+
 }

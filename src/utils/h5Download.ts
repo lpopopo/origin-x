@@ -245,7 +245,7 @@ export class H5DownloadUtils {
       const contentLength = response.headers.get('content-length')
       const total = contentLength ? parseInt(contentLength, 10) : 0
       
-      const reader = response.body?.getReader()
+      const reader = response.body && response.body.getReader()
       if (!reader) {
         throw new Error('无法读取响应流')
       }

@@ -6,7 +6,7 @@ import { UserWork } from '../../../types/auth'
 import { WorksService } from '../../services/works'
 import { H5DownloadUtils } from '../../utils/h5Download'
 
-import currency from '../../assets/currency.png'
+const currency = 'https://img.52725.uno/assets/currency.png'
 
 
 import './index.less'
@@ -219,13 +219,13 @@ export default function Profile() {
             <View className='avatar-container'>
               <Image 
                 className='profile-avatar' 
-                src={state.user?.userAvatar || ''} 
+                src={(state.user && state.user.userAvatar) || ''} 
                 mode='aspectFill'
               />
             </View>
             <View className='user-details'>
-              <Text className='username'>{state.user?.username || '动图创作者'}</Text>
-              <Text className='email-text'>{state.user?.email || 'creator@example.com'}</Text>
+              <Text className='username'>{(state.user && state.user.username) || '动图创作者'}</Text>
+              <Text className='email-text'>{(state.user && state.user.email) || 'creator@example.com'}</Text>
             </View>
           </View>
         </View>
@@ -238,7 +238,7 @@ export default function Profile() {
             <View className='balance-header'>
               <View className='balance-info'>
                 <Text className='balance-label'>我的余额</Text>
-                <Text className='points-display'>{state.user?.balance || 1234}</Text>
+                <Text className='points-display'>{(state.user && state.user.balance) || 1234}</Text>
               </View>
               <View className='balance-icon'>
                 <Image src={currency} mode="aspectFit" />
@@ -283,23 +283,22 @@ export default function Profile() {
           ) : (
             userWorks.map((work: UserWork) => (
               <View key={work.id} className='history-item'>
-                <View className='history-content'>
-                  <Image 
-                    className={`history-preview ${isLongPressing ? 'long-pressing' : ''}`}
-                    src={work.generatedImageUrl} 
-                    mode='aspectFill'
-                    onClick={() => handleImagePreview(work.generatedImageUrl)}
-                    onLongPress={() => handleLongPressDownload(work.generatedImageUrl)}
-                    onTouchStart={() => isH5 && handleH5LongPressStart(work.generatedImageUrl)}
-                    onTouchEnd={() => isH5 && handleH5LongPressEnd()}
-                    onTouchCancel={() => isH5 && handleH5LongPressEnd()}
-                  />
-                  <View className='history-details'>
-                    <View className='points-info'>
-                      <Text className='points-text'>-10积分</Text>
+                <View className='history-card'>
+                  <View className='image-container'>
+                    <Image
+                      className={`history-preview ${isLongPressing ? 'long-pressing' : ''}`}
+                      src={work.generatedImageUrl}
+                      mode='aspectFill'
+                      onClick={() => handleImagePreview(work.generatedImageUrl)}
+                      onLongPress={() => handleLongPressDownload(work.generatedImageUrl)}
+                      onTouchStart={() => isH5 && handleH5LongPressStart(work.generatedImageUrl)}
+                      onTouchEnd={() => isH5 && handleH5LongPressEnd()}
+                      onTouchCancel={() => isH5 && handleH5LongPressEnd()}
+                    />
+                    <View className='image-overlay'>
+                      <Text className='history-description'>{work.prompt}</Text>
+                      <Text className='history-date'>{formatDate(work.createdAt)}</Text>
                     </View>
-                    <Text className='history-description'>{work.prompt}</Text>
-                    <Text className='history-date'>{formatDate(work.createdAt)}</Text>
                   </View>
                 </View>
               </View>

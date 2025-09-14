@@ -16,7 +16,7 @@ const DEFAULT_KV_SEPARATOR = ':';
 /**
  * Check if a string is not empty or only contains whitespace characters
  */
-const isValidString = (str: string) => (str ?? '').trim() !== '';
+const isValidString = (str: string) => (str != null ? str : '').trim() !== '';
 
 /**
  * @description A TransformStream inst that splits a stream into parts based on {@link DEFAULT_STREAM_SEPARATOR}

@@ -1,5 +1,5 @@
 import { View, Input, Button, Text } from '@tarojs/components';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Taro from '@tarojs/taro';
 import { LoginForm } from '../../../types/auth';
 import { AuthService } from '../../services/auth';
@@ -14,6 +14,25 @@ const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const { fetchUserProfile } = useUser();
+
+  // H5环境下设置页面标题和logo
+  useEffect(() => {
+    if (Taro.getEnv() === Taro.ENV_TYPE.WEB) {
+      // 设置页面标题
+      document.title = '表情包动起来';
+
+      // 设置favicon
+      const favicon = document.querySelector('link[rel="icon"]') as HTMLLinkElement;
+      if (favicon) {
+        favicon.href = '/assets/logo.png';
+      } else {
+        const newFavicon = document.createElement('link');
+        newFavicon.rel = 'icon';
+        newFavicon.href = '/assets/logo.png';
+        document.head.appendChild(newFavicon);
+      }
+    }
+  }, []);
 
   const handleInput = (field: keyof LoginForm, value: string) => {
     setForm(prev => ({ ...prev, [field]: value }));
@@ -53,6 +72,7 @@ const Login: React.FC = () => {
   return (
     <View className='login-container'>
       <View className='login-box'>
+        <View className='app-title'>表情包动起来</View>
         <View className='login-title'>登录</View>
         
         <View className='form-item'>

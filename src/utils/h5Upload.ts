@@ -138,7 +138,7 @@ export class H5UploadUtils {
           canvas.height = height
           
           // 绘制压缩后的图片
-          ctx?.drawImage(img, 0, 0, width, height)
+          ctx && ctx.drawImage(img, 0, 0, width, height)
           
           // 转换为Blob
           canvas.toBlob(
@@ -240,7 +240,7 @@ export class H5UploadUtils {
       element.style.borderColor = ''
       element.style.backgroundColor = ''
       
-      const files = Array.from(e.dataTransfer?.files || [])
+      const files = Array.from((e.dataTransfer && e.dataTransfer.files) || [])
       const imageFiles = files.filter(file => this.isValidImage(file))
       
       if (imageFiles.length > 0) {

@@ -152,14 +152,14 @@ export class GenerateService {
         // 1. 连接成功
         setTimeout(() => {
           if (!isCancelled) {
-            callbacks.onConnected?.({ event: 'connected', message: 'Connected to mock SSE' })
+            callbacks.onConnected && callbacks.onConnected({ event: 'connected', message: 'Connected to mock SSE' })
           }
         }, 100)
         
         // 2. 状态更新 - 处理中 0%
         setTimeout(() => {
           if (!isCancelled) {
-            callbacks.onStatusUpdate?.({
+            callbacks.onStatusUpdate && callbacks.onStatusUpdate({
               taskId,
               status: 'processing',
               progress: 0
@@ -170,7 +170,7 @@ export class GenerateService {
         // 3. 状态更新 - 处理中 25%
         setTimeout(() => {
           if (!isCancelled) {
-            callbacks.onStatusUpdate?.({
+            callbacks.onStatusUpdate && callbacks.onStatusUpdate({
               taskId,
               status: 'processing',
               progress: 25
@@ -181,7 +181,7 @@ export class GenerateService {
         // 4. 状态更新 - 处理中 50%
         setTimeout(() => {
           if (!isCancelled) {
-            callbacks.onStatusUpdate?.({
+            callbacks.onStatusUpdate && callbacks.onStatusUpdate({
               taskId,
               status: 'processing',
               progress: 50
@@ -192,7 +192,7 @@ export class GenerateService {
         // 5. 状态更新 - 处理中 75%
         setTimeout(() => {
           if (!isCancelled) {
-            callbacks.onStatusUpdate?.({
+            callbacks.onStatusUpdate && callbacks.onStatusUpdate({
               taskId,
               status: 'processing',
               progress: 75
@@ -203,7 +203,7 @@ export class GenerateService {
         // 6. 完成
         setTimeout(() => {
           if (!isCancelled) {
-            callbacks.onFinished?.({
+            callbacks.onFinished && callbacks.onFinished({
               taskId,
               status: 'completed',
               progress: 100,
@@ -245,7 +245,7 @@ export class GenerateService {
           },
           onError: (error) => {
             console.error('SSE 连接错误:', error)
-            callbacks.onConnectionError?.(error)
+            callbacks.onConnectionError && callbacks.onConnectionError(error)
           },
           onUpdate: (chunk) => {
             try {
@@ -259,42 +259,42 @@ export class GenerateService {
               switch (eventType) {
                 case 'connected':
                   console.log('收到connected事件:', data)
-                  callbacks.onConnected?.(chunk)
+                  callbacks.onConnected && callbacks.onConnected(chunk)
                   break
                 case 'status':
                   console.log('收到status事件:', data)
                   // 将 SSE 数据转换为 TaskStatusEvent 类型
                   const statusEvent: TaskStatusEvent = {
-                    taskId: data?.taskId || taskId,
-                    status: data?.status || 'unknown',
-                    progress: data?.progress || 0
+                    taskId: (data && data.taskId) || taskId,
+                    status: (data && data.status) || 'unknown',
+                    progress: (data && data.progress) || 0
                   }
-                  callbacks.onStatusUpdate?.(statusEvent)
+                  callbacks.onStatusUpdate && callbacks.onStatusUpdate(statusEvent)
                   break
                 case 'finished':
                   console.log('收到finished事件:', data)
                   // 将 SSE 数据转换为 TaskFinishedEvent 类型
                   const finishedEvent: TaskFinishedEvent = {
-                    taskId: data?.taskId || taskId,
-                    status: data?.status || 'finished',
-                    progress: data?.progress || 100,
-                    gifUrl: data?.gifUrl,
-                    gifFileSize: data?.gifFileSize,
-                    gifWidth: data?.gifWidth,
-                    gifHeight: data?.gifHeight,
-                    actualDuration: data?.actualDuration,
-                    error: data?.error,
-                    errorCode: data?.errorCode
+                    taskId: (data && data.taskId) || taskId,
+                    status: (data && data.status) || 'finished',
+                    progress: (data && data.progress) || 100,
+                    gifUrl: data && data.gifUrl,
+                    gifFileSize: data && data.gifFileSize,
+                    gifWidth: data && data.gifWidth,
+                    gifHeight: data && data.gifHeight,
+                    actualDuration: data && data.actualDuration,
+                    error: data && data.error,
+                    errorCode: data && data.errorCode
                   }
-                  callbacks.onFinished?.(finishedEvent)
+                  callbacks.onFinished && callbacks.onFinished(finishedEvent)
                   break
                 case 'error':
                   console.log('收到error事件:', chunk)
                   // 将 SSE 数据转换为 TaskErrorEvent 类型
                   const errorEvent: TaskErrorEvent = {
-                    error: data?.error || data || '未知错误'
+                    error: (data && data.error) || data || '未知错误'
                   }
-                  callbacks.onError?.(errorEvent)
+                  callbacks.onError && callbacks.onError(errorEvent)
                   break
                 default:
                   console.log('未知事件类型:', eventType, chunk)
@@ -311,14 +311,14 @@ export class GenerateService {
       ).catch((error) => {
         console.error('建立SSE连接失败:', error)
         const connectionError = new Error('建立SSE连接失败')
-        callbacks.onConnectionError?.(connectionError)
+        callbacks.onConnectionError && callbacks.onConnectionError(connectionError)
       })
 
       // 设置超时，避免长时间等待
       const timeoutId = setTimeout(() => {
         if (abortController.signal.aborted === false) {
           abortController.abort()
-          callbacks.onConnectionError?.(new Error('连接超时'))
+          callbacks.onConnectionError && callbacks.onConnectionError(new Error('连接超时'))
         }
       }, 300000) // 5分钟超时
 
@@ -332,7 +332,7 @@ export class GenerateService {
     } catch (error) {
       console.error('建立SSE连接失败:', error)
       const connectionError = new Error('建立SSE连接失败')
-      callbacks.onConnectionError?.(connectionError)
+      callbacks.onConnectionError && callbacks.onConnectionError(connectionError)
       return () => {}
     }
   }

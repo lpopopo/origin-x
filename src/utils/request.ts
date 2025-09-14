@@ -44,7 +44,7 @@ export class RequestService {
 
       // 检查HTTP状态码
       if (response.statusCode !== 200) {
-        throw new Error(`HTTP ${response.statusCode}: ${response.data?.message || '请求失败'}`);
+        throw new Error(`HTTP ${response.statusCode}: ${(response.data && response.data.message) || '请求失败'}`);
       }
 
       // 检查后端业务错误码

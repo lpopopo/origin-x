@@ -1122,7 +1122,7 @@
   color: #374151;
   outline: none;
   min-height: 60px;
-  max-height: calc(16px * 1.5 * 10 + 32px); /* 10行：字体大小 * 行高 * 10行 + 上下padding */
+  max-height: 272px;
   line-height: 1.5;
   transition: all 0.2s ease;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
@@ -1233,8 +1233,8 @@
   }
   
   .input-area {
-    padding: 12px;
-    bottom: var(--tabbar-height, 50px);
+    padding: 0 12px; /* 移动端也完全移除上下padding */
+    bottom: calc(var(--tabbar-height, 50px) - 50px); /* 移动端也向上移动50px */
   }
   
   .input-card {
@@ -1388,10 +1388,10 @@
 /* 新的输入区域样式 - 基于原型图横向布局 */
 .input-area {
   position: fixed;
-  bottom: var(--tabbar-height, 50px);
+  bottom: calc(var(--tabbar-height, 50px) - 50px); /* 向上移动50px，让输入框更贴近tabbar */
   left: 0;
   right: 0;
-  padding: 16px;
+  padding: 0 16px; /* 完全移除上下padding */
   z-index: 1000;
 }
 
@@ -1408,6 +1408,7 @@
   border: 1px solid #e5e7eb;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
   overflow: hidden;
+  margin: 0; /* 确保没有外边距 */
 }
 
 /* 图片上传容器内的图片显示 */
@@ -1654,7 +1655,7 @@
 /* 向上弹出的选项列表 */
 .style-options {
   position: absolute;
-  bottom: calc(100% + 4px); /* 改为向上弹出 */
+  bottom: 104%;
   left: 0;
   right: 0;
   background: #ffffff;
