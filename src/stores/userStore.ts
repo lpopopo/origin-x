@@ -73,10 +73,31 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 interface UserProviderProps {
     children: ReactNode;
     requireAuth?: boolean; // 是否需要校验登录，默认为true
+    routeWhitelist?: string[]; // 路由白名单，在白名单内的页面不需要校验登录权限
 }
 
-export function UserProvider({ children, requireAuth = true }: UserProviderProps) {
+export function UserProvider({ children, requireAuth = true, routeWhitelist = [] }: UserProviderProps) {
     const [state, dispatch] = useReducer(userReducer, initialState);
+
+    // 检查当前路由是否在白名单中
+    const isRouteInWhitelist = (route: string): boolean => {
+        if (!route || routeWhitelist.length === 0) {
+            return false;
+        }
+        
+        // 支持精确匹配和包含匹配
+        return routeWhitelist.some(whitelistRoute => {
+            // 精确匹配
+            if (route === whitelistRoute) {
+                return true;
+            }
+            // 包含匹配（支持部分路径匹配）
+            if (route.includes(whitelistRoute) || whitelistRoute.includes(route)) {
+                return true;
+            }
+            return false;
+        });
+    };
 
     // 获取用户信息
     const fetchUserProfile = async () => {
@@ -113,14 +134,22 @@ export function UserProvider({ children, requireAuth = true }: UserProviderProps
             return;
         }
 
+        // 获取当前路由
+        const currentPages = Taro.getCurrentPages();
+        const currentPage = currentPages[currentPages.length - 1];
+        const currentRoute = currentPage?.route;
+        console.log('currentRoute', currentRoute);
+
+        // 如果当前路由在白名单中，跳过登录校验
+        if (!currentRoute || isRouteInWhitelist(currentRoute)) {
+            console.log(`路由 ${currentRoute} 在白名单中，跳过登录校验`);
+            return;
+        }
+
         try {
             await fetchUserProfile();
         } catch (error) {
             // 如果获取用户信息失败，跳转到登录页面
-            const currentPages = Taro.getCurrentPages();
-            const currentPage = currentPages[currentPages.length - 1];
-            const currentRoute = currentPage?.route;
-            
             // 如果当前不在登录页面，则跳转
             if (currentRoute && !currentRoute.includes('login') && !currentRoute.includes('register')) {
                 Taro.redirectTo({
@@ -133,7 +162,7 @@ export function UserProvider({ children, requireAuth = true }: UserProviderProps
     // 应用启动时检查用户状态
     useEffect(() => {
         checkAuthAndRedirect();
-    }, [requireAuth]); // 添加requireAuth作为依赖
+    }, [requireAuth, routeWhitelist]); // 添加requireAuth和routeWhitelist作为依赖
 
     const value: UserContextType = {
         state,

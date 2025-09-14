@@ -14,6 +14,11 @@ function App({ children }: PropsWithChildren<any>) {
   return (
     <UserProvider
       requireAuth={true}
+      routeWhitelist={[
+        '/pages/login/index',
+        '/pages/register/index',
+        '/pages/workspace/index'
+      ]}
     >
       {children}
     </UserProvider>
