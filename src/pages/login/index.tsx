@@ -88,8 +88,7 @@ const Login: React.FC = () => {
         <View className='form-item'>
           <Input
             className='input'
-            type="safe-password"
-            password={true}
+            type='password'
             placeholder='请输入密码'
             value={form.password}
             onInput={e => handleInput('password', e.detail.value)}

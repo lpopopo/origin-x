@@ -1,0 +1,399 @@
+.work-preview-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .modal-mask {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background: rgba(0, 0, 0, 0.5) !important;
+    z-index: 1 !important;
+  }
+
+  .modal-container {
+    position: relative !important;
+    z-index: 2 !important;
+    width: 90% !important;
+    max-width: 500px !important;
+    max-height: 85vh !important;
+    background: white !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .modal-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 16px 20px !important;
+    border-bottom: 1px solid #f0f0f0 !important;
+    flex-shrink: 0 !important;
+    background: white !important;
+
+    .modal-title {
+      font-size: 18px !important;
+      font-weight: 600 !important;
+      color: #333 !important;
+    }
+
+    .close-btn {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: #f5f5f5;
+      cursor: pointer;
+      transition: background 0.2s ease;
+
+      &:hover {
+        background: #e8e8e8;
+      }
+
+      &:active {
+        background: #ddd;
+      }
+
+      .close-icon {
+        font-size: 20px;
+        color: #666;
+        line-height: 1;
+      }
+    }
+  }
+
+  .modal-content {
+    flex: 1 !important;
+    overflow-y: auto !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border-radius: 0 !important;
+    height: auto !important;
+    max-height: none !important;
+    width: auto !important;
+    max-width: none !important;
+    box-shadow: none !important;
+    animation: none !important;
+  }
+
+  .work-preview-content {
+    padding: 20px !important;
+    width: 100% !important;
+    min-width: 320px !important;
+
+    .image-container {
+      position: relative !important;
+      margin-bottom: 20px !important;
+      border-radius: 12px !important;
+      overflow: hidden !important;
+      background: #f8f8f8 !important;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1) !important;
+      min-height: 200px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+
+      .work-gif {
+        width: 100% !important;
+        max-width: 100% !important;
+        max-height: 400px !important;
+        min-height: 150px !important;
+        display: block !important;
+        cursor: pointer !important;
+        transition: transform 0.2s ease !important;
+        object-fit: contain !important;
+        border-radius: 8px !important;
+        background: #f0f0f0 !important;
+
+        &:active {
+          transform: scale(0.98);
+        }
+      }
+
+      // 针对img元素的强制样式
+      img.work-gif {
+        width: 100% !important;
+        max-width: 100% !important;
+        max-height: 400px !important;
+        min-height: 150px !important;
+        display: block !important;
+        cursor: pointer !important;
+        transition: transform 0.2s ease !important;
+        object-fit: contain !important;
+        border-radius: 8px !important;
+        background: #f0f0f0 !important;
+      }
+
+      .image-placeholder {
+        width: 100% !important;
+        height: 200px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background: #f5f5f5 !important;
+        color: #999 !important;
+        font-size: 14px !important;
+        flex-direction: column !important;
+        border-radius: 8px !important;
+      }
+
+      .image-info-overlay {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+
+        .image-size,
+        .image-duration {
+          background: rgba(0, 0, 0, 0.7);
+          color: white;
+          padding: 4px 8px;
+          border-radius: 4px;
+          font-size: 12px;
+          line-height: 1.2;
+        }
+      }
+    }
+
+    .work-details {
+      .detail-item {
+        display: flex;
+        margin-bottom: 12px;
+        align-items: flex-start;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+
+        .detail-label {
+          color: #666;
+          font-size: 14px;
+          min-width: 80px;
+          flex-shrink: 0;
+        }
+
+        .detail-value {
+          color: #333;
+          font-size: 14px;
+          flex: 1;
+          word-break: break-all;
+
+          &.prompt-text {
+            line-height: 1.4;
+            padding: 8px;
+            background: #f5f5f5;
+            border-radius: 6px;
+            margin-left: 8px;
+          }
+        }
+      }
+    }
+  }
+
+  .modal-actions {
+    display: flex !important;
+    gap: 12px !important;
+    padding: 16px 20px !important;
+    border-top: 1px solid #f0f0f0 !important;
+    flex-shrink: 0 !important;
+    background: white !important;
+
+    .action-btn {
+      flex: 1;
+      height: 44px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 500;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      &.secondary-btn {
+        background: #f5f5f5;
+        color: #666;
+
+        &:hover {
+          background: #e8e8e8;
+        }
+
+        &:active {
+          background: #ddd;
+        }
+      }
+
+      &.primary-btn {
+        background: #1890ff;
+        color: white;
+
+        &:hover:not(.loading):not(:disabled) {
+          background: #40a9ff;
+        }
+
+        &:active:not(.loading):not(:disabled) {
+          background: #096dd9;
+        }
+
+        &.loading {
+          background: #91d5ff;
+          cursor: not-allowed;
+          transform: none !important;
+          animation: none !important;
+        }
+
+        &:disabled {
+          background: #d9d9d9;
+          color: #fff;
+          cursor: not-allowed;
+        }
+      }
+    }
+  }
+
+  // 响应式设计
+  @media (max-width: 480px) {
+    .modal-container {
+      width: 95%;
+      max-height: 90vh;
+    }
+
+    .work-preview-content {
+      padding: 15px;
+
+      .image-container {
+        margin-bottom: 15px;
+
+        .work-gif {
+          max-height: 250px;
+        }
+
+        .image-info-overlay {
+          top: 8px;
+          right: 8px;
+
+          .image-size,
+          .image-duration {
+            padding: 3px 6px;
+            font-size: 11px;
+          }
+        }
+      }
+
+      .work-details {
+        .detail-item {
+          flex-direction: column;
+          margin-bottom: 10px;
+
+          .detail-label {
+            margin-bottom: 4px;
+            min-width: auto;
+          }
+
+          .detail-value {
+            &.prompt-text {
+              margin-left: 0;
+              margin-top: 4px;
+            }
+          }
+        }
+      }
+    }
+
+    .modal-actions {
+      padding: 12px 15px;
+      gap: 10px;
+
+      .action-btn {
+        height: 40px;
+        font-size: 14px;
+      }
+    }
+  }
+
+  // 深色模式支持
+  @media (prefers-color-scheme: dark) {
+    .modal-container {
+      background: #1f1f1f;
+    }
+
+    .modal-header {
+      border-bottom-color: #333;
+
+      .modal-title {
+        color: #e6e6e6;
+      }
+
+      .close-btn {
+        background: #333;
+
+        &:hover {
+          background: #444;
+        }
+
+        &:active {
+          background: #555;
+        }
+
+        .close-icon {
+          color: #ccc;
+        }
+      }
+    }
+
+    .modal-actions {
+      border-top-color: #333;
+
+      .action-btn.secondary-btn {
+        background: #333;
+        color: #ccc;
+
+        &:hover {
+          background: #444;
+        }
+
+        &:active {
+          background: #555;
+        }
+      }
+    }
+
+    .work-preview-content {
+      .image-container {
+        background: #2a2a2a;
+      }
+
+      .work-details {
+        .detail-item {
+          .detail-label {
+            color: #999;
+          }
+
+          .detail-value {
+            color: #e6e6e6;
+
+            &.prompt-text {
+              background: #333;
+            }
+          }
+        }
+      }
+    }
+  }
+}

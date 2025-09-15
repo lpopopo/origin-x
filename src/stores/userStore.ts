@@ -142,7 +142,6 @@ export function UserProvider({ children, requireAuth = true, routeWhitelist = []
 
         // 如果当前路由在白名单中，跳过登录校验
         if (!currentRoute || isRouteInWhitelist(currentRoute)) {
-            console.log(`路由 ${currentRoute} 在白名单中，跳过登录校验`);
             return;
         }
 

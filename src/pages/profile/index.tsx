@@ -1,10 +1,11 @@
 import { View, Text, Image, Button } from '@tarojs/components'
-import Taro, { useLoad, showToast } from '@tarojs/taro'
+import Taro, { useLoad, showToast, usePullDownRefresh } from '@tarojs/taro'
 import { useState, useRef } from 'react'
 import { useUser } from '../../stores/userStore'
 import { UserWork } from '../../../types/auth'
 import { WorksService } from '../../services/works'
-import { H5DownloadUtils } from '../../utils/h5Download'
+import { DownloadManager } from '../../utils/downloadManager'
+import WorkPreviewModal, { WorkPreviewData } from '../../components/WorkPreviewModal'
 
 const currency = 'https://img.52725.uno/assets/currency.png'
 
@@ -20,10 +21,9 @@ export default function Profile() {
   const [worksError, setWorksError] = useState<string | null>(null)
   const [worksPageSize, setWorksPageSize] = useState(10)
   
-  // H5环境检测和长按下载相关状态
-  const [isH5, setIsH5] = useState(false)
-  const longPressTimer = useRef<NodeJS.Timeout | null>(null)
-  const [isLongPressing, setIsLongPressing] = useState(false)
+  // 作品预览弹窗状态
+  const [previewModalVisible, setPreviewModalVisible] = useState(false)
+  const [selectedWork, setSelectedWork] = useState<WorkPreviewData | null>(null)
 
   // 获取用户历史记录
   const fetchUserWorks = async (pageNo: number = 1, pageSize: number = 10) => {
@@ -49,10 +49,20 @@ export default function Profile() {
 
   useLoad(() => {
     console.log('Profile page loaded.')
-    // 检测H5环境
-    setIsH5(H5DownloadUtils.isH5())
     // 加载用户历史记录
     fetchUserWorks(1, 10)
+  })
+
+  // 下拉刷新处理
+  usePullDownRefresh(async () => {
+    try {
+      await refreshUserWorks()
+      showToast({ title: '刷新成功', icon: 'success' })
+    } catch (error) {
+      showToast({ title: '刷新失败', icon: 'error' })
+    } finally {
+      Taro.stopPullDownRefresh()
+    }
   })
 
   // 格式化日期函数
@@ -79,11 +89,6 @@ export default function Profile() {
     }
   }
 
-  const handleRefreshClick = () => {
-    refreshUserWorks()
-    showToast({ title: '刷新成功', icon: 'success' })
-  }
-
   // 处理图片预览
   const handleImagePreview = (url: string): void => {
     Taro.previewImage({
@@ -92,122 +97,41 @@ export default function Profile() {
     })
   }
 
-  // 处理长按下载图片
-  const handleLongPressDownload = (url: string): void => {
-    if (isH5) {
-      // H5环境使用H5下载工具
-      handleH5Download(url)
-    } else {
-      // 小程序环境使用原有逻辑
-      handleMiniProgramDownload(url)
+  // 处理作品点击 - 打开预览弹窗
+  const handleWorkClick = (work: UserWork): void => {
+    const workData: WorkPreviewData = {
+      id: work.id,
+      gifUrl: work.generatedImageUrl,
+      originalImageUrl: work.originalImageUrl,
+      prompt: work.prompt,
+      createdAt: work.createdAt,
+      // 如果后端没有提供这些字段，可以先设置为undefined
+      gifFileSize: undefined,
+      gifWidth: undefined,
+      gifHeight: undefined,
+      actualDuration: undefined
     }
+
+    setSelectedWork(workData)
+    setPreviewModalVisible(true)
   }
 
-  // H5环境下的下载处理
-  const handleH5Download = async (url: string): Promise<void> => {
+  // 关闭预览弹窗
+  const handleClosePreviewModal = (): void => {
+    setPreviewModalVisible(false)
+    setSelectedWork(null)
+  }
+
+  // 处理下载（从弹窗中触发）
+  const handleDownloadFromModal = async (workData: WorkPreviewData): Promise<void> => {
     try {
-      showToast({ title: '开始下载...', icon: 'loading' })
-      await H5DownloadUtils.smartDownloadImage(url)
-      showToast({ title: '下载成功', icon: 'success' })
+      await DownloadManager.downloadImage(workData.gifUrl)
+      console.log('作品下载成功:', workData.id)
     } catch (error) {
-      console.error('H5下载失败:', error)
-      showToast({ title: '下载失败', icon: 'none' })
+      console.error('作品下载失败:', error)
     }
   }
 
-  // 小程序环境下的下载处理
-  const handleMiniProgramDownload = (url: string): void => {
-    // 检查用户是否授权保存到相册
-    Taro.getSetting({
-      success: (res) => {
-        if (!res.authSetting['scope.writePhotosAlbum']) {
-          // 请求授权
-          Taro.authorize({
-            scope: 'scope.writePhotosAlbum',
-            success: () => {
-              downloadAndSaveImage(url)
-            },
-            fail: () => {
-              Taro.showModal({
-                title: '提示',
-                content: '需要授权保存到相册才能下载图片',
-                showCancel: false,
-              })
-            },
-          })
-        } else {
-          // 已授权，直接保存
-          downloadAndSaveImage(url)
-        }
-      },
-    })
-  }
-
-  // H5环境下的长按事件处理
-  const handleH5LongPressStart = (url: string): void => {
-    if (!isH5) return
-    
-    setIsLongPressing(true)
-    longPressTimer.current = setTimeout(() => {
-      handleH5Download(url)
-      setIsLongPressing(false)
-    }, 100) // 1s长按触发
-  }
-
-  const handleH5LongPressEnd = (): void => {
-    if (!isH5) return
-    
-    if (longPressTimer.current) {
-      clearTimeout(longPressTimer.current)
-      longPressTimer.current = null
-    }
-    setIsLongPressing(false)
-  }
-
-  // 下载并保存图片到相册（小程序环境）
-  const downloadAndSaveImage = (url: string): void => {
-    Taro.showLoading({ title: '下载中...' })
-    
-    // 下载图片到本地
-    Taro.downloadFile({
-      url: url,
-      success: (res) => {
-        if (res.statusCode === 200) {
-          // 保存图片到相册
-          Taro.saveImageToPhotosAlbum({
-            filePath: res.tempFilePath,
-            success: () => {
-              Taro.hideLoading()
-              Taro.showToast({
-                title: '图片已保存到相册',
-                icon: 'success',
-              })
-            },
-            fail: () => {
-              Taro.hideLoading()
-              Taro.showToast({
-                title: '保存失败',
-                icon: 'none',
-              })
-            },
-          })
-        } else {
-          Taro.hideLoading()
-          Taro.showToast({
-            title: '下载失败',
-            icon: 'none',
-          })
-        }
-      },
-      fail: () => {
-        Taro.hideLoading()
-        Taro.showToast({
-          title: '下载失败',
-          icon: 'none',
-        })
-      },
-    })
-  }
 
 
   return (
@@ -256,15 +180,7 @@ export default function Profile() {
       <View className='history-section'>
         <View className='history-header'>
           <Text className='history-title'>创作历史</Text>
-          {/* <View className='history-actions'>
-            <View className='refresh-btn' onClick={handleRefreshClick}>
-              <Text className='refresh-icon'>🔄</Text>
-            </View>
-            <View className='view-all-btn' onClick={handleViewAllClick}>
-              <Text className='history-icon'>🕒</Text>
-              <Text className='view-all-text'>查看全部</Text>
-            </View>
-          </View> */}
+          <Text className='refresh-hint'>下拉刷新↓</Text>
         </View>
         
         <View className='history-list'>
@@ -286,14 +202,10 @@ export default function Profile() {
                 <View className='history-card'>
                   <View className='image-container'>
                     <Image
-                      className={`history-preview ${isLongPressing ? 'long-pressing' : ''}`}
+                      className="history-preview"
                       src={work.generatedImageUrl}
                       mode='aspectFill'
-                      onClick={() => handleImagePreview(work.generatedImageUrl)}
-                      onLongPress={() => handleLongPressDownload(work.generatedImageUrl)}
-                      onTouchStart={() => isH5 && handleH5LongPressStart(work.generatedImageUrl)}
-                      onTouchEnd={() => isH5 && handleH5LongPressEnd()}
-                      onTouchCancel={() => isH5 && handleH5LongPressEnd()}
+                      onClick={() => handleWorkClick(work)}
                     />
                     <View className='image-overlay'>
                       <Text className='history-description'>{work.prompt}</Text>
@@ -306,6 +218,14 @@ export default function Profile() {
           )}
         </View>
       </View>
+
+      {/* 作品预览弹窗 */}
+      <WorkPreviewModal
+        isOpened={previewModalVisible}
+        workData={selectedWork}
+        onClose={handleClosePreviewModal}
+        onDownload={handleDownloadFromModal}
+      />
     </View>
   )
 }

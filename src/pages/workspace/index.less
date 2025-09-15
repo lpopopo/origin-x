@@ -385,8 +385,8 @@
 .message-wrapper {
   display: flex;
   align-items: flex-start;
-  margin-bottom: 16px;
-  gap: 12px;
+  margin-bottom: 18px;
+  gap: 14px;
 }
 
 .user-message-wrapper {
@@ -442,30 +442,56 @@
 /* 聊天气泡样式 */
 .message-bubble {
   max-width: 75%;
-  padding: 12px 16px;
+  padding: 10px 14px;
   position: relative;
   width: fit-content;
+  height: fit-content;
+  min-height: unset;
+}
+
+/* 图片消息气泡样式 - 无padding */
+.message-bubble.image-bubble {
+  padding: 0;
+  overflow: visible;
+}
+
+/* Demo卡片消息气泡样式 - 更大宽度 */
+.message-bubble.demo-bubble {
+  max-width: 70%; /* 设置最大宽度为70% */
+  padding: 0; /* Demo卡片内部自己处理padding */
 }
 
 .chat-bubble-left {
   background: @bg-card;
   border-radius: 4px 16px 16px 16px;
   box-shadow: @shadow-sm;
+  height: fit-content;
 }
 
 .chat-bubble-right {
   background: @primary-color;
   border-radius: 16px 4px 16px 16px;
   color: white;
+  height: fit-content;
 }
 
 .bubble-text {
   font-size: 14px;
-  line-height: 1.5;
+  line-height: 1.4;
   color: inherit;
   word-wrap: break-word;
   width: fit-content;
   min-width: 0;
+  margin: 0;
+  padding: 0;
+  vertical-align: top;
+  display: block;
+
+  /* 小程序环境特殊处理 */
+  .taro_page & {
+    line-height: 1.3;
+    display: inline;
+  }
 }
 
 .chat-bubble-right .bubble-text {
@@ -479,37 +505,121 @@
 /* 消息图片样式 */
 .bubble-image-container {
   border-radius: 8px;
-  overflow: hidden;
-  max-width: 300px;
-  width: fit-content;
+  width: 300px;
+  height: 200px;
   position: relative;
+  background: transparent;
+  overflow: visible; /* 改为visible确保图片能显示 */
 }
 
 .bubble-image {
-  width: 100%;
-  height: auto;
+  width: 300px;
+  height: 200px;
   border-radius: 8px;
-  max-width: 300px;
   display: block;
+  object-fit: cover; /* 确保图片填充容器 */
 }
 
 /* 图片加载失败的fallback样式 */
 .bubble-image-fallback {
   display: none;
-  width: 100%;
-  min-height: 200px;
-  background-color: transparent;
-  border: none;
+  width: 300px;
+  height: 200px;
+  background-color: #f8f9fa;
+  border: 2px dashed #dee2e6;
   border-radius: 8px;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: #999;
+  color: #6c757d;
   cursor: pointer;
 
   .fallback-icon {
-    font-size: 20px;
+    font-size: 32px;
     opacity: 0.8;
+    margin-bottom: 8px;
+  }
+
+  .fallback-text {
+    font-size: 14px;
+    opacity: 0.8;
+  }
+}
+
+/* 自适应图片容器样式 */
+.adaptive-image-container {
+  position: relative;
+  border-radius: 8px;
+  background: transparent;
+  overflow: hidden;
+  max-width: 100%;
+  transition: all 0.3s ease;
+}
+
+.adaptive-bubble-image {
+  border-radius: 8px;
+  display: block;
+  object-fit: contain; /* 保持图片比例，完整显示 */
+  max-width: 100%;
+  height: auto;
+  transition: opacity 0.3s ease;
+}
+
+.adaptive-bubble-image:hover {
+  transform: scale(1.02);
+  transition: transform 0.2s ease;
+}
+
+/* 自适应图片加载失败样式 */
+.adaptive-image-fallback {
+  display: flex;
+  background-color: #f8f9fa;
+  border: 2px dashed #dee2e6;
+  border-radius: 8px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #6c757d;
+  cursor: pointer;
+  min-height: 150px;
+
+  .fallback-icon {
+    font-size: 32px;
+    margin-bottom: 8px;
+  }
+
+  .fallback-text {
+    font-size: 14px;
+    color: #999;
+  }
+}
+
+/* 自适应图片加载状态 */
+.adaptive-image-loading {
+  display: flex;
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+
+  .loading-text {
+    font-size: 14px;
+    color: #6c757d;
+    animation: pulse 1.5s ease-in-out infinite alternate;
+  }
+}
+
+@keyframes pulse {
+  from {
+    opacity: 0.5;
+  }
+  to {
+    opacity: 1;
   }
 }
 
@@ -523,10 +633,11 @@
 
 /* Demo卡片样式 */
 .demo-card {
-  width: 100%;
-  max-width: 100%;
+  width: 100%; /* 填充整个气泡宽度 */
+  padding: 12px; /* 添加内边距 */
   cursor: pointer;
   transition: all 0.2s ease;
+  box-sizing: border-box; /* 确保padding包含在宽度内 */
 }
 
 .demo-card:hover {
@@ -542,16 +653,29 @@
   color: @text-primary;
   margin-bottom: 12px;
   font-weight: 500;
+  line-height: 1.2;
+  margin: 0;
+  padding: 0;
+  vertical-align: top;
+  display: block;
+
+  /* 小程序环境特殊处理 */
+  .taro_page & {
+    line-height: 1.1;
+    display: inline;
+  }
 }
 
 .demo-video-container {
   position: relative;
-  width: 100%;
+  width: 100%; /* 自适应气泡宽度 */
+  aspect-ratio: 4 / 3; /* 保持4:3比例 */
   border-radius: 12px;
   overflow: hidden;
   cursor: pointer;
   transition: all 0.3s ease;
-  margin-bottom: 12px;
+  margin-bottom: 6px; /* 缩小与提示词的距离 */
+  background: #f8f9fa; /* 添加背景色便于调试 */
 }
 
 .demo-video-container:hover {
@@ -559,9 +683,10 @@
 }
 
 .demo-video {
-  width: 100%;
-  height: 180px;
-  object-fit: cover;
+  width: 100%; /* 填充容器宽度 */
+  height: 100%; /* 填充容器高度 */
+  display: block; /* 确保display正确 */
+  object-fit: contain; /* 完整显示，保持比例，居中 */
 }
 
 .demo-play-overlay {
@@ -602,23 +727,42 @@
 .demo-prompt {
   font-size: 13px;
   color: @text-secondary;
-  line-height: 1.4;
+  line-height: 1.2;
   background: rgba(74, 144, 226, 0.05);
-  padding: 8px 12px;
+  padding: 10px 14px;
   border-radius: 8px;
   border: 1px solid rgba(74, 144, 226, 0.1);
-  margin-bottom: 8px;
+  margin-bottom: 10px;
+  vertical-align: top;
+  display: block;
+
+  /* 小程序环境特殊处理 */
+  .taro_page & {
+    line-height: 1.1;
+    display: inline;
+  }
 }
 
 .demo-action-hint {
   text-align: center;
-  padding: 6px 0;
+  padding: 8px 0;
 }
 
 .demo-hint-text {
   font-size: 12px;
   color: @primary-color;
   font-weight: 500;
+  line-height: 1.2;
+  margin: 0;
+  padding: 0;
+  vertical-align: top;
+  display: block;
+
+  /* 小程序环境特殊处理 */
+  .taro_page & {
+    line-height: 1.1;
+    display: inline;
+  }
 }
 
 /* AI输入动态效果 - 5个圆圈动画 */
@@ -1156,6 +1300,12 @@
   line-height: 1.4;
 }
 
+/* 消息列表底部锚点样式 */
+.messages-end {
+  height: 1px;
+  width: 100%;
+}
+
 /* 弹窗底部 */
 .modal-footer {
   display: flex;
@@ -1226,6 +1376,17 @@
   flex: none;
 }
 
+/* Demo卡片移动端适配 */
+@media (max-width: @breakpoint-md) {
+  .message-bubble.demo-bubble {
+    max-width: 80%; /* 移动端最大宽度80% */
+  }
+
+  .demo-card {
+    padding: 10px; /* 移动端减小内边距 */
+  }
+}
+
 /* 移动端适配 */
 @media (max-width: @breakpoint-md) {
   .main-content {
@@ -1234,7 +1395,7 @@
   
   .input-area {
     padding: 0 12px; /* 移动端也完全移除上下padding */
-    bottom: calc(var(--tabbar-height, 50px) - 50px); /* 移动端也向上移动50px */
+    bottom: var(--tabbar-height, 50px); /* 移动端也统一使用tabbar高度 */
   }
   
   .input-card {
@@ -1388,7 +1549,7 @@
 /* 新的输入区域样式 - 基于原型图横向布局 */
 .input-area {
   position: fixed;
-  bottom: calc(var(--tabbar-height, 50px) - 50px); /* 向上移动50px，让输入框更贴近tabbar */
+  bottom: var(--tabbar-height, 50px); /* 统一使用tabbar高度 */
   left: 0;
   right: 0;
   padding: 0 16px; /* 完全移除上下padding */
@@ -1519,11 +1680,12 @@
   border: none;
   outline: none;
   font-size: 16px;
-  line-height: 1.5;
+  line-height: 1.3;
   color: #374151;
   resize: none;
   box-sizing: border-box;
   overflow-y: auto; /* 显示滚动条 */
+  vertical-align: top; /* 防止文本垂直居中 */
 }
 
 .main-text-input::-webkit-scrollbar {
@@ -1715,4 +1877,32 @@
 
 .send-btn:active {
   transform: translateY(0);
+}
+
+/* 发送按钮加载状态 */
+.send-btn.loading {
+  pointer-events: none; /* 禁用点击 */
+  background: linear-gradient(135deg, #6b7280 0%, #9ca3af 100%); /* 灰色背景 */
+  box-shadow: 0 2px 8px rgba(107, 114, 128, 0.3);
+}
+
+.send-btn.loading:hover {
+  transform: none; /* 禁用hover效果 */
+  background: linear-gradient(135deg, #6b7280 0%, #9ca3af 100%);
+  box-shadow: 0 2px 8px rgba(107, 114, 128, 0.3);
+}
+
+/* 加载旋转动画 */
+.loading-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
