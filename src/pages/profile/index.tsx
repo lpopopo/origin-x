@@ -7,9 +7,6 @@ import { WorksService } from '../../services/works'
 import { DownloadManager } from '../../utils/downloadManager'
 import WorkPreviewModal, { WorkPreviewData } from '../../components/WorkPreviewModal'
 
-const currency = 'https://img.52725.uno/assets/currency.png'
-
-
 import './index.less'
 
 export default function Profile() {
@@ -163,9 +160,6 @@ export default function Profile() {
               <View className='balance-info'>
                 <Text className='balance-label'>我的余额</Text>
                 <Text className='points-display'>{(state.user && state.user.balance) || 1234}</Text>
-              </View>
-              <View className='balance-icon'>
-                <Image src={currency} mode="aspectFit" />
               </View>
             </View>
             <Button className='recharge-btn' onClick={handleRechargeClick}>

@@ -449,9 +449,9 @@
   min-height: unset;
 }
 
-/* 图片消息气泡样式 - 无padding */
+/* 图片消息气泡样式 - 添加内边距 */
 .message-bubble.image-bubble {
-  padding: 0;
+  padding: 8px;
   overflow: visible;
 }
 
@@ -473,6 +473,7 @@
   border-radius: 16px 4px 16px 16px;
   color: white;
   height: fit-content;
+  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3), 0 2px 6px rgba(74, 144, 226, 0.2);
 }
 
 .bubble-text {
@@ -556,6 +557,11 @@
   transition: all 0.3s ease;
 }
 
+/* 用户图片消息的容器样式 */
+.user-message-wrapper .adaptive-image-container {
+  border-radius: 6px; /* 稍小的圆角与气泡内部保持协调 */
+}
+
 .adaptive-bubble-image {
   border-radius: 8px;
   display: block;
@@ -563,6 +569,11 @@
   max-width: 100%;
   height: auto;
   transition: opacity 0.3s ease;
+}
+
+/* 用户消息中的图片圆角调整 */
+.user-message-wrapper .adaptive-bubble-image {
+  border-radius: 6px; /* 与容器保持一致的圆角 */
 }
 
 .adaptive-bubble-image:hover {
@@ -689,40 +700,6 @@
   object-fit: contain; /* 完整显示，保持比例，居中 */
 }
 
-.demo-play-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(45deg, rgba(74, 144, 226, 0.8), rgba(107, 182, 255, 0.8));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.demo-video-container:hover .demo-play-overlay {
-  opacity: 1;
-}
-
-.demo-play-button {
-  width: 60px;
-  height: 60px;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-}
-
-.demo-play-icon {
-  font-size: 24px;
-  color: @primary-color;
-  margin-left: 4px;
-}
 
 .demo-prompt {
   font-size: 13px;
@@ -1424,7 +1401,25 @@
   .main-text-input {
     height: 80px; /* 固定高度 */
     font-size: 16px; /* 防止iOS缩放 */
-    padding: 10px 14px;
+    padding: 6px 14px 10px 14px; /* 减少上内边距，让移动端文本起始位置也更靠上 */
+  }
+
+  /* 移动端小程序环境特殊处理 */
+  .taro_page .main-text-input,
+  .taro-text-area .main-text-input {
+    padding: 0px 14px 10px 14px; /* 小程序移动端也去掉上内边距 */
+    margin-top: -4px; /* 移动端也需要更大的负边距 */
+    line-height: 1.2; /* 移动端也使用更紧凑的行高 */
+  }
+
+  .taro_page textarea.main-text-input {
+    padding-top: 0 !important;
+    margin-top: -6px !important; /* 移动端textarea特殊处理 */
+    vertical-align: top !important;
+  }
+
+  .taro_page .text-input-wrapper {
+    padding-top: 4px; /* 移动端包装器上边距更小 */
   }
   
   .function-buttons {
@@ -1619,7 +1614,7 @@
 /* 主输入区域 - 横向布局 */
 .input-main-section {
   display: flex;
-  align-items: flex-start;
+  align-items: flex-start; /* 确保所有元素从顶部对齐 */
   padding: 16px;
   gap: 12px;
 }
@@ -1675,17 +1670,80 @@
 .main-text-input {
   width: 100%;
   height: 100px; /* 增加高度，约5-6行文字 */
-  padding: 12px 16px;
+  padding: 6px 16px 12px 16px; /* 进一步减少上内边距 */
   background: transparent;
   border: none;
   outline: none;
   font-size: 16px;
-  line-height: 1.3;
+  line-height: 1.4; /* 稍微增加行高提升可读性 */
   color: #374151;
   resize: none;
   box-sizing: border-box;
   overflow-y: auto; /* 显示滚动条 */
   vertical-align: top; /* 防止文本垂直居中 */
+}
+
+/* 小程序环境特殊处理 - 修正文本起始位置 */
+.taro_page .main-text-input,
+.taro-text-area .main-text-input {
+  padding: 0px 16px 12px 16px; /* 小程序中完全去掉上内边距 */
+  margin-top: -6px; /* 进一步向上调整，抵消小程序默认的上边距 */
+  line-height: 1.2; /* 更紧凑的行高 */
+
+  /* 小程序键盘弹出时的优化 */
+  cursor-spacing: 20px; /* 光标与键盘的距离 */
+  confirm-type: done; /* 键盘右下角按钮显示"完成" */
+  confirm-hold: true; /* 点击键盘右下角按钮时是否保持键盘不收起 */
+}
+
+/* 小程序Textarea组件特殊样式重置 */
+.taro_page textarea.main-text-input {
+  /* 重置小程序textarea的默认样式 */
+  padding-top: 0 !important;
+  margin-top: -8px !important; /* 更大的负边距 */
+  vertical-align: top !important;
+
+  /* 确保文本从真正的顶部开始 */
+  display: block !important;
+  box-sizing: border-box !important;
+}
+
+/* 小程序中的文本区域包装器调整 */
+.taro_page .text-input-wrapper {
+  padding-top: 6px; /* 在包装器层面添加上边距 */
+}
+
+/* 小程序输入区域整体优化 */
+.taro_page .input-area {
+  /* 确保输入区域在键盘弹出时有足够的滚动空间 */
+  margin-bottom: 20px;
+}
+
+/* 小程序页面底部留出更多空间 */
+.taro_page .main-content {
+  padding-bottom: calc(var(--input-area-bottom-space, 190px) + 100px); /* 额外增加100px空间 */
+}
+
+/* 更强力的小程序Textarea重置 - 针对原生textarea元素 */
+.taro_page .text-input-wrapper textarea,
+.taro_page .main-text-input textarea,
+.taro_page textarea[class*="main-text-input"] {
+  padding: 0 16px 12px 16px !important;
+  margin: -10px 0 0 0 !important; /* 使用更大的负边距强制重置 */
+  line-height: 1.2 !important;
+  vertical-align: top !important;
+  box-sizing: border-box !important;
+
+  /* 重置可能的默认样式 */
+  border: none !important;
+  outline: none !important;
+  background: transparent !important;
+}
+
+/* 小程序环境下的调试边框 - 帮助查看边界 */
+.taro_page .main-text-input {
+  /* 可以临时添加边框查看实际边界 */
+  /* border: 1px solid red !important; */
 }
 
 .main-text-input::-webkit-scrollbar {

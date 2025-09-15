@@ -50,16 +50,12 @@ export class H5UploadUtils {
   static isValidImage(file: File): boolean {
     const validTypes = [
       'image/jpeg',
-      'image/png', 
-      'image/gif',
-      'image/webp',
-      'image/svg+xml',
-      'image/bmp'
+      'image/png'
     ]
-    
-    const validExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp']
+
+    const validExtensions = ['jpg', 'jpeg', 'png']
     const ext = file.name.toLowerCase().split('.').pop() || ''
-    
+
     return validTypes.includes(file.type) || validExtensions.includes(ext)
   }
 

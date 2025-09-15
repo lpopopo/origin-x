@@ -184,6 +184,7 @@ export default function Workspace() {
   const inputRef = useRef<any>(null)
   const buttonRef = useRef<any>(null)
   const messagesEndRef = useRef<any>(null)
+  const textareaRef = useRef<any>(null) // Textarea组件引用
 
   useLoad(() => {
     loadDemoExample()
@@ -517,7 +518,7 @@ export default function Workspace() {
       }
       
       // 检查文件大小
-      const maxSize = 20 * 1024 * 1024 // 20MB
+      const maxSize = 10 * 1024 * 1024 // 10MB
       if (!H5UploadUtils.checkFileSize(file, maxSize)) {
         throw new Error(`文件大小不能超过${H5UploadUtils.formatFileSize(maxSize)}`)
       }
@@ -526,8 +527,8 @@ export default function Workspace() {
       const dimensions = await getImageDimensions(file)
       
       // 验证图片尺寸范围
-      if (dimensions.width < 300 || dimensions.height < 300 || dimensions.width > 3000 || dimensions.height > 3000) {
-        throw new Error('图片尺寸不符合要求，请上传300×300至3000×3000范围内的图片')
+      if (dimensions.width < 300 || dimensions.height < 300 || dimensions.width > 5000 || dimensions.height > 5000) {
+        throw new Error('图片尺寸不符合要求，请上传300×300至5000×5000范围内的图片')
       }
       
       // 显示上传进度提示
@@ -603,6 +604,16 @@ export default function Workspace() {
           await handleFileUpload(files[0])
           
         } catch (error) {
+          // 如果是用户取消选择文件，不显示错误提示
+          if (error instanceof Error && (
+            error.message === '未选择文件' ||
+            error.message.includes('用户取消') ||
+            error.message.includes('canceled') ||
+            error.message.includes('cancelled')
+          )) {
+            return // 静默处理，不显示toast
+          }
+
           const errorMessage = error instanceof Error ? error.message : '文件选择失败'
           Taro.showToast({
             title: errorMessage,
@@ -636,8 +647,8 @@ export default function Workspace() {
         })
         
         // 验证图片尺寸范围
-        if (imageInfo.width < 300 || imageInfo.height < 300 || imageInfo.width > 3000 || imageInfo.height > 3000) {
-          throw new Error('图片尺寸不符合要求，请上传300×300至3000×3000范围内的图片')
+        if (imageInfo.width < 300 || imageInfo.height < 300 || imageInfo.width > 5000 || imageInfo.height > 5000) {
+          throw new Error('图片尺寸不符合要求，请上传300×300至5000×5000范围内的图片')
         }
         
         // 显示上传进度提示
@@ -689,6 +700,17 @@ export default function Workspace() {
         }
       }
     } catch (error) {
+      // 如果是用户取消选择图片，不显示错误提示
+      if (error instanceof Error && (
+        error.message.includes('用户取消') ||
+        error.message.includes('canceled') ||
+        error.message.includes('cancelled') ||
+        error.message.includes('fail cancel') ||
+        error.message === '未选择图片'
+      )) {
+        return // 静默处理，不显示toast
+      }
+
       const errorMessage = error instanceof Error ? error.message : '选择图片失败'
       Taro.showToast({
         title: errorMessage,
@@ -703,6 +725,80 @@ export default function Workspace() {
     // 移除开头的空行但保留用户输入的换行
     const value = e.detail.value || ''
     setInputText(value)
+  }
+
+  // 处理输入框获得焦点
+  const handleInputFocus = (): void => {
+    // 小程序环境下，延迟滚动确保键盘完全弹出
+    if (Taro.getEnv() === Taro.ENV_TYPE.WEAPP) {
+      setTimeout(() => {
+        // 滚动到输入区域
+        const query = Taro.createSelectorQuery()
+        query.select('.input-area').boundingClientRect()
+        query.selectViewport().scrollOffset()
+        query.exec((res) => {
+          if (res[0] && res[1]) {
+            const inputTop = res[0].top + res[1].scrollTop
+            const viewportHeight = res[1].windowHeight || 0
+            const keyboardHeight = 300 // 估算键盘高度
+            const targetScrollTop = inputTop - (viewportHeight - keyboardHeight) + 100
+
+            if (targetScrollTop > 0) {
+              Taro.pageScrollTo({
+                scrollTop: targetScrollTop,
+                duration: 300
+              })
+            }
+          }
+        })
+      }, 300) // 等待键盘动画完成
+    }
+  }
+
+  // 处理输入框失去焦点
+  const handleInputBlur = (): void => {
+    // 键盘收起后可以选择滚动回原位置，或保持当前位置
+    // 这里选择保持当前位置，用户体验更好
+  }
+
+  // 点击页面其他区域收起键盘
+  const handlePageClick = (e: any): void => {
+    // 只在小程序环境下执行
+    if (Taro.getEnv() !== Taro.ENV_TYPE.WEAPP) {
+      return
+    }
+
+    // 检查点击的元素是否是输入相关的区域
+    const target = e.target || e.currentTarget
+
+    // 多重检查确保不是输入区域
+    const isInputRelated = (
+      // 检查类名
+      target?.classList?.contains('input-area') ||
+      target?.classList?.contains('input-container') ||
+      target?.classList?.contains('input-card') ||
+      target?.classList?.contains('text-input-wrapper') ||
+      target?.classList?.contains('main-text-input') ||
+      target?.classList?.contains('image-upload-btn') ||
+      target?.classList?.contains('style-dropdown') ||
+      target?.classList?.contains('send-btn') ||
+      // 检查父元素（使用原生DOM方法更可靠）
+      (target?.closest && (
+        target.closest('.input-area') ||
+        target.closest('.input-container') ||
+        target.closest('.input-card') ||
+        target.closest('.text-input-wrapper') ||
+        target.closest('.main-text-input')
+      ))
+    )
+
+    // 如果点击的不是输入相关区域，收起键盘
+    if (!isInputRelated) {
+      // 调用输入框的blur方法收起键盘
+      if (textareaRef.current) {
+        textareaRef.current.blur()
+      }
+    }
   }
 
 
@@ -1040,7 +1136,7 @@ export default function Workspace() {
 
 
   return (
-    <View className='workspace'>
+    <View className='workspace' onClick={handlePageClick}>
       {/* 头部LOGO */}
       <View className='header'>
         <View className='creativity-logo'>
@@ -1168,20 +1264,6 @@ export default function Workspace() {
                             objectFit='cover'
                           />
                         )}
-                        <View className='demo-play-overlay' onClick={() => {
-                          const videoElement = document.querySelector(`video[src*="${message.demoData && message.demoData.videoUrl && message.demoData.videoUrl.split('/').pop()}"]`) as HTMLVideoElement
-                          if (videoElement) {
-                            if (videoElement.paused) {
-                              videoElement.play().catch(() => {})
-                            } else {
-                              videoElement.pause()
-                            }
-                          }
-                        }}>
-                          <View className='demo-play-button'>
-                            <Text className='demo-play-icon'>▶</Text>
-                          </View>
-                        </View>
                       </View>
                       <Text className='demo-prompt'>{message.demoData && message.demoData.prompt}</Text>
                       <View className='demo-action-hint'>
@@ -1239,7 +1321,7 @@ export default function Workspace() {
 
 
       {/* 输入区域 */}
-      <View className='input-area' style={{ bottom: isH5 ? `${tabBarHeight}px` : '2px' }}>
+      <View className='input-area' style={{ bottom: isH5 ? `${tabBarHeight}px` : '2px' }} onClick={(e) => e.stopPropagation()}>
         <View className='input-container'>
           <View className='input-card'>
             {/* 主输入区域 - 横向布局 */}
@@ -1282,6 +1364,7 @@ export default function Workspace() {
               {/* 中间文本输入区域 */}
               <View className='text-input-wrapper'>
                 <Textarea
+                  ref={textareaRef}
                   className='main-text-input'
                   value={inputText}
                   onInput={handleInputChange}
@@ -1290,8 +1373,11 @@ export default function Workspace() {
                   maxlength={300}
                   showConfirmBar={false}
                   autoHeight={false}
-                  adjustPosition={false}
-                  cursorSpacing={0}
+                  adjustPosition={true}
+                  holdKeyboard={true}
+                  cursorSpacing={20}
+                  onFocus={handleInputFocus}
+                  onBlur={handleInputBlur}
                 />
               </View>
             </View>
