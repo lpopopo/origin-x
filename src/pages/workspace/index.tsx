@@ -252,7 +252,7 @@ export default function Workspace() {
               
               if (tabBar) {
                 const rect = tabBar.getBoundingClientRect()
-                calculatedHeight = rect.height
+                const calculatedHeight = rect.height
                 setTabBarHeight(calculatedHeight)
 
                 // 同时更新主内容区域的padding
