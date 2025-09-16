@@ -47,14 +47,6 @@ export class UploadService {
         return 'image/jpeg';
       case 'png':
         return 'image/png';
-      case 'gif':
-        return 'image/gif';
-      case 'webp':
-        return 'image/webp';
-      case 'svg':
-        return 'image/svg+xml';
-      case 'bmp':
-        return 'image/bmp';
       default:
         return 'image/jpeg';
     }
@@ -69,12 +61,12 @@ export class UploadService {
     if (typeof file === 'string') {
       // 小程序环境：检查文件扩展名
       const ext = file.toLowerCase().split('.').pop();
-      return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'].includes(ext || '');
+      return ['jpg', 'jpeg', 'png'].includes(ext || '');
     } else {
       // H5环境：检查MIME类型和扩展名
-      const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml', 'image/bmp'];
-      const validExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'];
-      
+      const validTypes = ['image/jpeg', 'image/png'];
+      const validExtensions = ['jpg', 'jpeg', 'png'];
+
       const ext = file.name.toLowerCase().split('.').pop() || '';
       return validTypes.includes(file.type) || validExtensions.includes(ext);
     }
@@ -146,8 +138,29 @@ export class UploadService {
    * @returns 上传结果
    */
   static async uploadImageToBed(
-    uploadUrl: string, 
-    filePath: string | File, 
+    uploadUrl: string,
+    filePath: string | File,
+    filename: string,
+    onProgress?: UploadProgressCallback
+  ): Promise<void> {
+    // 检测当前环境
+    const env = Taro.getEnv();
+
+    if (env === Taro.ENV_TYPE.WEB) {
+      // H5环境：使用fetch
+      await this.uploadImageToBedH5(uploadUrl, filePath, filename, onProgress);
+    } else {
+      // 小程序环境：使用Taro.request
+      await this.uploadImageToBedMiniProgram(uploadUrl, filePath, filename, onProgress);
+    }
+  }
+
+  /**
+   * H5环境下的图片上传
+   */
+  static async uploadImageToBedH5(
+    uploadUrl: string,
+    filePath: string | File,
     filename: string,
     onProgress?: UploadProgressCallback
   ): Promise<void> {
@@ -157,7 +170,7 @@ export class UploadService {
 
       // 根据文件名获取Content-Type
       const contentType = this.getContentType(filename);
-      
+
       // 使用普通对象而不是Headers类，提高兼容性
       const headers: Record<string, string> = {
         "Content-Type": contentType
@@ -187,7 +200,57 @@ export class UploadService {
         onProgress(100);
       }
     } catch (error) {
-      console.error('图片上传失败:', error);
+      console.error('H5图片上传失败:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 小程序环境下的图片上传
+   */
+  static async uploadImageToBedMiniProgram(
+    uploadUrl: string,
+    filePath: string | File,
+    filename: string,
+    onProgress?: UploadProgressCallback
+  ): Promise<void> {
+    try {
+      // 根据文件名获取Content-Type
+      const contentType = this.getContentType(filename);
+
+      // 使用Taro.request进行上传
+      const uploadResult = await new Promise<Taro.request.SuccessCallbackResult>((resolve, reject) => {
+        // 读取文件数据
+        this.readFileData(filePath as string).then((fileData) => {
+          Taro.request({
+            url: decodeURIComponentRecursive(uploadUrl),
+            method: 'PUT',
+            data: fileData,
+            header: {
+              'Content-Type': contentType
+            },
+            success: (res) => {
+              if (res.statusCode >= 200 && res.statusCode < 300) {
+                resolve(res);
+              } else {
+                reject(new Error(`图片上传失败: ${res.statusCode} - ${res.data}`));
+              }
+            },
+            fail: (err) => {
+              reject(new Error(`图片上传失败: ${err.errMsg}`));
+            }
+          });
+        }).catch(reject);
+      });
+
+      // 模拟上传进度
+      if (onProgress) {
+        onProgress(100);
+      }
+
+      console.log('小程序图片上传成功:', uploadResult.statusCode);
+    } catch (error) {
+      console.error('小程序图片上传失败:', error);
       throw error;
     }
   }
@@ -262,7 +325,7 @@ export class UploadService {
     }
 
     // 返回本地示例图片路径
-    const imageUrl = require('../assets/example.jpg');
+    const imageUrl = 'https://img.52725.uno/assets/example.jpg';
     console.log('✅ Mock上传完成，图片地址:', imageUrl);
     
     return {

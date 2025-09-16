@@ -142,7 +142,7 @@ class XRequestClass {
             credentials: "include" as RequestCredentials 
         };
 
-        callbacks?.onStream?.(abortController);
+        callbacks && callbacks.onStream && callbacks.onStream(abortController);
 
         try {
             const response = await xFetch(this.baseURL, {
@@ -176,7 +176,7 @@ class XRequestClass {
         } catch (error) {
             const err = error instanceof Error ? error : new Error('Unknown error!');
 
-            callbacks?.onError?.(err);
+            callbacks && callbacks.onError && callbacks.onError(err);
 
             throw err;
         }
@@ -194,10 +194,10 @@ class XRequestClass {
             transformStream,
         })) {
             chunks.push(chunk);
-            callbacks?.onUpdate?.(chunk);
+            callbacks && callbacks.onUpdate && callbacks.onUpdate(chunk);
         }
 
-        callbacks?.onSuccess?.(chunks);
+        callbacks && callbacks.onSuccess && callbacks.onSuccess(chunks);
     };
 
     private sseResponseHandler = async <Output = SSEOutput>(
@@ -246,7 +246,7 @@ class XRequestClass {
                         chunks.push(sseObj);
                         
                         // 调用更新回调
-                        callbacks?.onUpdate?.(sseObj);
+                        callbacks && callbacks.onUpdate && callbacks.onUpdate(sseObj);
                     }
                 }
                 
@@ -261,14 +261,14 @@ class XRequestClass {
             if (buffer.trim()) {
                 const sseObj = splitPart(buffer.trim()) as Output;
                 chunks.push(sseObj);
-                callbacks?.onUpdate?.(sseObj);
+                callbacks && callbacks.onUpdate && callbacks.onUpdate(sseObj);
             }
             
             // 调用成功回调
-            callbacks?.onSuccess?.(chunks);
+            callbacks && callbacks.onSuccess && callbacks.onSuccess(chunks);
         } catch (error) {
             const err = error instanceof Error ? error : new Error('Unknown error in SSE processing');
-            callbacks?.onError?.(err);
+            callbacks && callbacks.onError && callbacks.onError(err);
             throw err;
         } finally {
             reader.releaseLock();
@@ -281,8 +281,8 @@ class XRequestClass {
     ) => {
         const chunk: Output = await response.json();
 
-        callbacks?.onUpdate?.(chunk);
-        callbacks?.onSuccess?.([chunk]);
+        callbacks && callbacks.onUpdate && callbacks.onUpdate(chunk);
+        callbacks && callbacks.onSuccess && callbacks.onSuccess([chunk]);
     };
 }
 

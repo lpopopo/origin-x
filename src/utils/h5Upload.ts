@@ -50,16 +50,12 @@ export class H5UploadUtils {
   static isValidImage(file: File): boolean {
     const validTypes = [
       'image/jpeg',
-      'image/png', 
-      'image/gif',
-      'image/webp',
-      'image/svg+xml',
-      'image/bmp'
+      'image/png'
     ]
-    
-    const validExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp']
+
+    const validExtensions = ['jpg', 'jpeg', 'png']
     const ext = file.name.toLowerCase().split('.').pop() || ''
-    
+
     return validTypes.includes(file.type) || validExtensions.includes(ext)
   }
 
@@ -138,7 +134,7 @@ export class H5UploadUtils {
           canvas.height = height
           
           // 绘制压缩后的图片
-          ctx?.drawImage(img, 0, 0, width, height)
+          ctx && ctx.drawImage(img, 0, 0, width, height)
           
           // 转换为Blob
           canvas.toBlob(
@@ -240,7 +236,7 @@ export class H5UploadUtils {
       element.style.borderColor = ''
       element.style.backgroundColor = ''
       
-      const files = Array.from(e.dataTransfer?.files || [])
+      const files = Array.from((e.dataTransfer && e.dataTransfer.files) || [])
       const imageFiles = files.filter(file => this.isValidImage(file))
       
       if (imageFiles.length > 0) {

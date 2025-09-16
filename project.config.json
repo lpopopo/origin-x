@@ -4,12 +4,13 @@
   "description": "",
   "appid": "wxd0d4accda65efb82",
   "setting": {
-    "urlCheck": true,
+    "urlCheck": false,
     "es6": false,
     "enhance": false,
     "compileHotReLoad": false,
     "postcss": false,
-    "minified": false,
+    "minified": true,
+    "enableChunked": true,
     "compileWorklet": false,
     "uglifyFileName": false,
     "uploadWithSourceMap": true,
@@ -35,5 +36,6 @@
     "ignore": [],
     "include": []
   },
-  "editorSetting": {}
+  "editorSetting": {},
+  "libVersion": "3.10.0"
 }

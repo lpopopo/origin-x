@@ -16,7 +16,7 @@ export default function Index() {
         <Text className='hero-title'>欢迎使用 Origin-X</Text>
         <Text className='hero-subtitle'>您的智能工作伙伴</Text>
         {state.user ? (
-          <Text className='welcome-text'>欢迎回来，{state.user?.username}！</Text>
+          <Text className='welcome-text'>欢迎回来，{state.user && state.user.username}！</Text>
         ) : (
           <Text className='welcome-text'>请登录以使用完整功能</Text>
         )}

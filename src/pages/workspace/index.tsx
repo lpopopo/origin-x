@@ -5,6 +5,8 @@ import { UploadService } from '../../services/upload'
 import { H5UploadUtils } from '../../utils/h5Upload'
 import { GenerateService, DemoExample, GenerateConfig } from '../../services/generate'
 import { useUser } from '../../stores/userStore'
+import { DownloadManager } from '../../utils/downloadManager'
+import WorkPreviewModal, { WorkPreviewData } from '../../components/WorkPreviewModal'
 import './index.less'
 
 // 定义消息类型
@@ -31,6 +33,131 @@ interface UploadedImage {
   uploadTime: number // 上传时间
 }
 
+// 自适应图片气泡组件
+interface AdaptiveImageBubbleProps {
+  src: string
+  alt: string
+  onClick: () => void
+  isH5: boolean
+}
+
+function AdaptiveImageBubble({ src, alt, onClick, isH5 }: AdaptiveImageBubbleProps) {
+  const [imageDimensions, setImageDimensions] = useState<{width: number, height: number} | null>(null)
+  const [imageLoaded, setImageLoaded] = useState(false)
+  const [imageError, setImageError] = useState(false)
+
+  // 计算自适应尺寸
+  const calculateAdaptiveSize = (naturalWidth: number, naturalHeight: number) => {
+    const maxWidth = 150  // 最大宽度
+    const maxHeight = 200 // 最大高度
+    const minWidth = 100  // 最小宽度
+    const minHeight = 75  // 最小高度
+
+    let width = naturalWidth
+    let height = naturalHeight
+
+    // 如果图片太大，按比例缩小
+    if (width > maxWidth || height > maxHeight) {
+      const ratioW = maxWidth / width
+      const ratioH = maxHeight / height
+      const ratio = Math.min(ratioW, ratioH)
+      width = width * ratio
+      height = height * ratio
+    }
+
+    // 如果图片太小，适当放大
+    if (width < minWidth && height < minHeight) {
+      const ratioW = minWidth / width
+      const ratioH = minHeight / height
+      const ratio = Math.min(ratioW, ratioH)
+      width = width * ratio
+      height = height * ratio
+    }
+
+    return { width: Math.round(width), height: Math.round(height) }
+  }
+
+  const handleImageLoad = (e: any) => {
+    const img = e.target || e.detail
+    const naturalWidth = img.naturalWidth || img.width
+    const naturalHeight = img.naturalHeight || img.height
+
+    if (naturalWidth && naturalHeight) {
+      const adaptiveSize = calculateAdaptiveSize(naturalWidth, naturalHeight)
+      setImageDimensions(adaptiveSize)
+    }
+    setImageLoaded(true)
+  }
+
+  const handleImageError = () => {
+    setImageError(true)
+  }
+
+  const containerStyle = imageDimensions ? {
+    width: `${imageDimensions.width}px`,
+    height: `${imageDimensions.height}px`
+  } : {
+    width: '150px',
+    height: '100px'
+  }
+
+  const imageStyle = imageDimensions ? {
+    width: `${imageDimensions.width}px`,
+    height: `${imageDimensions.height}px`
+  } : {
+    width: '150px',
+    height: '100px'
+  }
+
+  return (
+    <View className='adaptive-image-container' style={containerStyle}>
+      {!imageError ? (
+        isH5 ? (
+          <img
+            className='adaptive-bubble-image'
+            src={src}
+            alt={alt}
+            style={{
+              ...imageStyle,
+              cursor: 'pointer',
+              opacity: imageLoaded ? 1 : 0,
+              transition: 'opacity 0.3s ease'
+            }}
+            onClick={onClick}
+            onLoad={handleImageLoad}
+            onError={handleImageError}
+          />
+        ) : (
+          <Image
+            className='adaptive-bubble-image'
+            src={src}
+            style={imageStyle}
+            onClick={onClick}
+            onLoad={handleImageLoad}
+            onError={handleImageError}
+          />
+        )
+      ) : (
+        <View
+          className='adaptive-image-fallback'
+          style={containerStyle}
+          onClick={onClick}
+        >
+          <Text className='fallback-icon'>🖼️</Text>
+          <Text className='fallback-text'>图片加载失败</Text>
+        </View>
+      )}
+
+      {/* 加载状态 */}
+      {!imageLoaded && !imageError && (
+        <View className='adaptive-image-loading' style={containerStyle}>
+          <Text className='loading-text'>加载中...</Text>
+        </View>
+      )}
+    </View>
+  )
+}
+
 export default function Workspace() {
   const { state: userState } = useUser()
   const [messages, setMessages] = useState<Message[]>([])
@@ -40,20 +167,26 @@ export default function Workspace() {
   const [uploadProgress, setUploadProgress] = useState<number>(0)
   const [cleanupFunction, setCleanupFunction] = useState<(() => void) | null>(null)
   const [isProcessing, setIsProcessing] = useState<boolean>(false) // 是否正在处理任务
+  const [isSending, setIsSending] = useState<boolean>(false) // 是否正在发送消息
   const [isDragOver, setIsDragOver] = useState<boolean>(false)
   const [demoExample, setDemoExample] = useState<DemoExample | null>(null)
   const [isLoadingDemo, setIsLoadingDemo] = useState<boolean>(false)
   const [generateConfig, setGenerateConfig] = useState<GenerateConfig | null>(null)
   const [tabBarHeight, setTabBarHeight] = useState<number>(50) // tabBar高度
   const [inputOptions, setInputOptions] = useState<string[]>([]) // 输入选项
-  const [selectedStyle, setSelectedStyle] = useState<string>('default') // 选中的风格
-  const [showStyleDropdown, setShowStyleDropdown] = useState<boolean>(false) // 是否显示风格下拉框
+  const [selectedStyle, setSelectedStyle] = useState<string>('style-b') // 选中的风格，优先使用"动作的幅度更大"
+  const [showStyleDropdown, setShowStyleDropdown] = useState<boolean>(false) // 是否显示风格下拦框
+  // 作品预览弹窗状态
+  const [previewModalVisible, setPreviewModalVisible] = useState(false)
+  const [selectedWork, setSelectedWork] = useState<WorkPreviewData | null>(null)
+  const [generatedWorksData, setGeneratedWorksData] = useState<Map<string, WorkPreviewData>>(new Map()) // 存储生成的作品数据
   const uploadAreaRef = useRef<any>(null)
   const inputRef = useRef<any>(null)
   const buttonRef = useRef<any>(null)
+  const messagesEndRef = useRef<any>(null)
+  const textareaRef = useRef<any>(null) // Textarea组件引用
 
   useLoad(() => {
-    console.log('Workspace page loaded.')
     loadDemoExample()
     loadGenerateConfig()
     loadInputOptions()
@@ -63,7 +196,7 @@ export default function Workspace() {
     const welcomeMessage: Message = {
       id: 'welcome-' + Date.now().toString(),
       type: 'text',
-      content: '你好！😄 只需要上传一张图片🏞，然后描述你想要的动画效果✨，我就能为你生成精彩的动图！\n\n💡 支持人物动作、物体移动、特效添加等多种动画类型',
+      content: '你好！😄 只需要上传一张图片🏞，然后描述你想要的动画效果✨，我就能为你生成精彩的动图！\n💡 支持人物动作、物体移动、特效添加等多种动画类型',
       timestamp: Date.now(),
       isUser: false
     }
@@ -73,17 +206,35 @@ export default function Workspace() {
   // 获取tabBar高度
   const getTabBarHeight = (): void => {
     try {
-      // 获取系统信息
-      Taro.getSystemInfo({
-        success: (res) => {
-          console.log('系统信息:', res)
+      if (Taro.getEnv() === Taro.ENV_TYPE.WEAPP) {
+        // 微信小程序环境 - 使用新的API
+        try {
+          const windowInfo = Taro.getWindowInfo()
+          const systemInfo = Taro.getDeviceInfo()
+
           let calculatedHeight = 50 // 默认高度
-          
-          if (Taro.getEnv() === Taro.ENV_TYPE.WEAPP) {
-            // 微信小程序环境
-            const safeAreaInsetBottom = res.safeArea ? res.screenHeight - res.safeArea.bottom : 0
-            calculatedHeight = res.platform === 'ios' ? 49 + safeAreaInsetBottom : 50
-          } else if (Taro.getEnv() === Taro.ENV_TYPE.WEB) {
+          const safeAreaInsetBottom = windowInfo.safeArea ? windowInfo.screenHeight - windowInfo.safeArea.bottom : 0
+          calculatedHeight = systemInfo.platform === 'ios' ? 49 + safeAreaInsetBottom : 50
+
+          setTabBarHeight(calculatedHeight)
+          updateMainContentPadding(calculatedHeight)
+        } catch (error) {
+          // 如果新API不支持，降级使用旧API
+          Taro.getSystemInfo({
+            success: (res) => {
+              let calculatedHeight = 50
+              const safeAreaInsetBottom = res.safeArea ? res.screenHeight - res.safeArea.bottom : 0
+              calculatedHeight = res.platform === 'ios' ? 49 + safeAreaInsetBottom : 50
+              setTabBarHeight(calculatedHeight)
+              updateMainContentPadding(calculatedHeight)
+            },
+            fail: () => {
+              setTabBarHeight(50)
+              updateMainContentPadding(50)
+            }
+          })
+        }
+      } else if (Taro.getEnv() === Taro.ENV_TYPE.WEB) {
             // H5环境，可以通过DOM查询
             setTimeout(() => {
               // 尝试多种选择器来查找tabBar
@@ -102,33 +253,22 @@ export default function Workspace() {
               
               if (tabBar) {
                 const rect = tabBar.getBoundingClientRect()
-                calculatedHeight = rect.height
+                const calculatedHeight = rect.height
                 setTabBarHeight(calculatedHeight)
-                console.log('检测到的tabBar高度:', calculatedHeight, 'selector:', tabBar.className)
-                
+
                 // 同时更新主内容区域的padding
                 updateMainContentPadding(calculatedHeight)
               } else {
-                console.log('未找到tabBar元素，使用默认高度')
                 setTabBarHeight(50)
                 updateMainContentPadding(50)
               }
             }, 300) // 增加延迟确保DOM完全渲染
-            return
+          } else {
+            // 其他环境使用默认高度
+            setTabBarHeight(50)
+            updateMainContentPadding(50)
           }
-          
-          setTabBarHeight(calculatedHeight)
-          updateMainContentPadding(calculatedHeight)
-          console.log('计算的tabBar高度:', calculatedHeight)
-        },
-        fail: () => {
-          console.log('获取系统信息失败，使用默认tabBar高度')
-          setTabBarHeight(50)
-          updateMainContentPadding(50)
-        }
-      })
     } catch (error) {
-      console.error('获取tabBar高度失败:', error)
       setTabBarHeight(50)
       updateMainContentPadding(50)
     }
@@ -162,9 +302,7 @@ export default function Workspace() {
         '背景特效'
       ]
       setInputOptions(mockOptions)
-      console.log('输入选项加载成功:', mockOptions)
     } catch (error) {
-      console.error('加载输入选项失败:', error)
       // 使用默认选项
       setInputOptions(['让头发飘动', '眼睛眨动', '微笑'])
     }
@@ -186,7 +324,7 @@ export default function Workspace() {
 
   // 获取当前选中风格的显示名称
   const getSelectedStyleLabel = (): string => {
-    if (!generateConfig?.styles) return '默认风格'
+    if (!generateConfig || !generateConfig.styles) return '默认风格'
     
     const entries = Object.entries(generateConfig.styles)
     const found = entries.find(([_, value]) => value === selectedStyle)
@@ -197,29 +335,51 @@ export default function Workspace() {
   const loadGenerateConfig = async (): Promise<void> => {
     try {
       const config = await GenerateService.getGenerateConfig()
+
+      // 对风格选项进行排序，"动作的幅度更大"排在最前面
+      if (config.styles) {
+        const sortedStyles: Record<string, string> = {}
+        const entries = Object.entries(config.styles)
+
+        // 优先添加"动作的幅度更大"
+        const preferredEntry = entries.find(([label]) => label === '动作的幅度更大')
+        if (preferredEntry) {
+          sortedStyles[preferredEntry[0]] = preferredEntry[1]
+        }
+
+        // 添加其他选项
+        entries.forEach(([label, value]) => {
+          if (label !== '动作的幅度更大') {
+            sortedStyles[label] = value
+          }
+        })
+
+        config.styles = sortedStyles
+      }
+
       setGenerateConfig(config)
-      
-      // 如果当前没有选中的风格，自动选择第一个
+
+      // 优先选择"动作的幅度更大"作为默认选项
       if (config.styles && Object.keys(config.styles).length > 0) {
-        const firstStyleValue = Object.values(config.styles)[0]
-        if (selectedStyle === 'default' || !Object.values(config.styles).includes(selectedStyle)) {
-          setSelectedStyle(firstStyleValue)
+        const preferredStyleValue = config.styles['动作的幅度更大']
+        const defaultStyleValue = preferredStyleValue || Object.values(config.styles)[0]
+
+        if (selectedStyle === 'default' || selectedStyle === 'style-b' || !Object.values(config.styles).includes(selectedStyle)) {
+          setSelectedStyle(defaultStyleValue)
         }
       }
-      
-      console.log('生成配置加载成功:', config)
     } catch (error) {
-      console.error('加载生成配置失败:', error)
       // 使用默认配置作为后备
       const fallbackConfig = {
         styles: {
-          '默认风格': 'default'
+          '动作的幅度更大': 'style-b',
+          '主体保持的更好': 'style-a'
         }
       }
       setGenerateConfig(fallbackConfig)
-      
-      // 设置默认选中第一个风格
-      setSelectedStyle('default')
+
+      // 设置默认选中"动作的幅度更大"
+      setSelectedStyle('style-b')
     }
   }
 
@@ -247,7 +407,6 @@ export default function Workspace() {
       setMessages(prev => [...prev, demoCardMessage])
       
     } catch (error) {
-      console.error('加载demo示例失败:', error)
       // 使用默认的示例数据作为后备
       setDemoExample({
         imageUrl: 'https://via.placeholder.com/400x400/FFB6C1/FFFFFF?text=Demo+Image',
@@ -301,6 +460,43 @@ export default function Workspace() {
     }
   }, [cleanupFunction])
 
+  // 自动滚动到最新消息
+  useEffect(() => {
+    if (messages.length > 0) {
+      setTimeout(() => {
+        if (isH5) {
+          // H5环境使用原生scrollIntoView
+          if (messagesEndRef.current) {
+            messagesEndRef.current.scrollIntoView({
+              behavior: 'smooth',
+              block: 'end'
+            })
+          }
+        } else {
+          // 小程序环境使用Taro的pageScrollTo
+          Taro.pageScrollTo({
+            scrollTop: 99999, // 滚动到很大的值，确保到底部
+            duration: 300
+          }).catch(() => {
+            // 如果pageScrollTo失败，尝试使用createSelectorQuery
+            const query = Taro.createSelectorQuery()
+            query.select('.messages-end').boundingClientRect()
+            query.selectViewport().scrollOffset()
+            query.exec((res) => {
+              if (res[0] && res[1]) {
+                const targetTop = res[0].top + res[1].scrollTop
+                Taro.pageScrollTo({
+                  scrollTop: targetTop,
+                  duration: 300
+                })
+              }
+            })
+          })
+        }
+      }, 100)
+    }
+  }, [messages, isH5])
+
   // 处理拖拽上传
   const handleDragAndDrop = async (files: File[]): Promise<void> => {
     setIsDragOver(false) // 重置拖拽状态
@@ -347,7 +543,7 @@ export default function Workspace() {
       }
       
       // 检查文件大小
-      const maxSize = 20 * 1024 * 1024 // 20MB
+      const maxSize = 10 * 1024 * 1024 // 10MB
       if (!H5UploadUtils.checkFileSize(file, maxSize)) {
         throw new Error(`文件大小不能超过${H5UploadUtils.formatFileSize(maxSize)}`)
       }
@@ -356,8 +552,8 @@ export default function Workspace() {
       const dimensions = await getImageDimensions(file)
       
       // 验证图片尺寸范围
-      if (dimensions.width < 300 || dimensions.height < 300 || dimensions.width > 3000 || dimensions.height > 3000) {
-        throw new Error('图片尺寸不符合要求，请上传300×300至3000×3000范围内的图片')
+      if (dimensions.width < 300 || dimensions.height < 300 || dimensions.width > 5000 || dimensions.height > 5000) {
+        throw new Error('图片尺寸不符合要求，请上传300×300至5000×5000范围内的图片')
       }
       
       // 显示上传进度提示
@@ -399,7 +595,6 @@ export default function Workspace() {
           icon: 'success'
         })
       } catch (uploadError) {
-        console.error('图片上传到图床失败:', uploadError)
         const errorMessage = uploadError instanceof Error ? uploadError.message : '图片上传失败'
         Taro.hideLoading()
         Taro.showToast({
@@ -408,7 +603,6 @@ export default function Workspace() {
         })
       }
     } catch (error) {
-      console.error('文件上传失败:', error)
       const errorMessage = error instanceof Error ? error.message : '文件上传失败'
       Taro.hideLoading()
       Taro.showToast({
@@ -435,7 +629,16 @@ export default function Workspace() {
           await handleFileUpload(files[0])
           
         } catch (error) {
-          console.error('H5文件选择失败:', error)
+          // 如果是用户取消选择文件，不显示错误提示
+          if (error instanceof Error && (
+            error.message === '未选择文件' ||
+            error.message.includes('用户取消') ||
+            error.message.includes('canceled') ||
+            error.message.includes('cancelled')
+          )) {
+            return // 静默处理，不显示toast
+          }
+
           const errorMessage = error instanceof Error ? error.message : '文件选择失败'
           Taro.showToast({
             title: errorMessage,
@@ -454,10 +657,10 @@ export default function Workspace() {
           throw new Error('未选择图片')
         }
 
-        const file = tempFiles?.[0]
+        const file = tempFiles && tempFiles[0]
         const localPath = tempFilePaths[0]
-        const fileName = file?.originalFileObj?.name || `image_${Date.now()}.jpg`
-        const fileSize = file?.size || 0
+        const fileName = (file && file.originalFileObj && file.originalFileObj.name) || `image_${Date.now()}.jpg`
+        const fileSize = (file && file.size) || 0
         
         // 小程序环境获取图片信息
         const imageInfo = await new Promise<{width: number, height: number}>((resolve, reject) => {
@@ -469,8 +672,8 @@ export default function Workspace() {
         })
         
         // 验证图片尺寸范围
-        if (imageInfo.width < 300 || imageInfo.height < 300 || imageInfo.width > 3000 || imageInfo.height > 3000) {
-          throw new Error('图片尺寸不符合要求，请上传300×300至3000×3000范围内的图片')
+        if (imageInfo.width < 300 || imageInfo.height < 300 || imageInfo.width > 5000 || imageInfo.height > 5000) {
+          throw new Error('图片尺寸不符合要求，请上传300×300至5000×5000范围内的图片')
         }
         
         // 显示上传进度提示
@@ -513,7 +716,6 @@ export default function Workspace() {
             icon: 'success'
           })
         } catch (uploadError) {
-          console.error('图片上传到图床失败:', uploadError)
           const errorMessage = uploadError instanceof Error ? uploadError.message : '图片上传失败'
           Taro.hideLoading()
           Taro.showToast({
@@ -523,7 +725,17 @@ export default function Workspace() {
         }
       }
     } catch (error) {
-      console.error('选择图片失败:', error)
+      // 如果是用户取消选择图片，不显示错误提示
+      if (error instanceof Error && (
+        error.message.includes('用户取消') ||
+        error.message.includes('canceled') ||
+        error.message.includes('cancelled') ||
+        error.message.includes('fail cancel') ||
+        error.message === '未选择图片'
+      )) {
+        return // 静默处理，不显示toast
+      }
+
       const errorMessage = error instanceof Error ? error.message : '选择图片失败'
       Taro.showToast({
         title: errorMessage,
@@ -535,7 +747,83 @@ export default function Workspace() {
 
   // 处理文本输入
   const handleInputChange = (e: any): void => {
-    setInputText(e.detail.value)
+    // 移除开头的空行但保留用户输入的换行
+    const value = e.detail.value || ''
+    setInputText(value)
+  }
+
+  // 处理输入框获得焦点
+  const handleInputFocus = (): void => {
+    // 小程序环境下，延迟滚动确保键盘完全弹出
+    if (Taro.getEnv() === Taro.ENV_TYPE.WEAPP) {
+      setTimeout(() => {
+        // 滚动到输入区域
+        const query = Taro.createSelectorQuery()
+        query.select('.input-area').boundingClientRect()
+        query.selectViewport().scrollOffset()
+        query.exec((res) => {
+          if (res[0] && res[1]) {
+            const inputTop = res[0].top + res[1].scrollTop
+            const viewportHeight = res[1].windowHeight || 0
+            const keyboardHeight = 300 // 估算键盘高度
+            const targetScrollTop = inputTop - (viewportHeight - keyboardHeight) + 100
+
+            if (targetScrollTop > 0) {
+              Taro.pageScrollTo({
+                scrollTop: targetScrollTop,
+                duration: 300
+              })
+            }
+          }
+        })
+      }, 300) // 等待键盘动画完成
+    }
+  }
+
+  // 处理输入框失去焦点
+  const handleInputBlur = (): void => {
+    // 键盘收起后可以选择滚动回原位置，或保持当前位置
+    // 这里选择保持当前位置，用户体验更好
+  }
+
+  // 点击页面其他区域收起键盘
+  const handlePageClick = (e: any): void => {
+    // 只在小程序环境下执行
+    if (Taro.getEnv() !== Taro.ENV_TYPE.WEAPP) {
+      return
+    }
+
+    // 检查点击的元素是否是输入相关的区域
+    const target = e.target || e.currentTarget
+
+    // 多重检查确保不是输入区域
+    const isInputRelated = (
+      // 检查类名
+      target?.classList?.contains('input-area') ||
+      target?.classList?.contains('input-container') ||
+      target?.classList?.contains('input-card') ||
+      target?.classList?.contains('text-input-wrapper') ||
+      target?.classList?.contains('main-text-input') ||
+      target?.classList?.contains('image-upload-btn') ||
+      target?.classList?.contains('style-dropdown') ||
+      target?.classList?.contains('send-btn') ||
+      // 检查父元素（使用原生DOM方法更可靠）
+      (target?.closest && (
+        target.closest('.input-area') ||
+        target.closest('.input-container') ||
+        target.closest('.input-card') ||
+        target.closest('.text-input-wrapper') ||
+        target.closest('.main-text-input')
+      ))
+    )
+
+    // 如果点击的不是输入相关区域，收起键盘
+    if (!isInputRelated) {
+      // 调用输入框的blur方法收起键盘
+      if (textareaRef.current) {
+        textareaRef.current.blur()
+      }
+    }
   }
 
 
@@ -551,7 +839,7 @@ export default function Workspace() {
       })
       return
     }
-    
+
     if (!uploadedImage) {
       Taro.showToast({
         title: '请上传图片',
@@ -560,8 +848,8 @@ export default function Workspace() {
       return
     }
 
-    // 检查是否正在处理任务
-    if (isProcessing) {
+    // 检查是否正在处理任务或发送中
+    if (isProcessing || isSending) {
       Taro.showToast({
         title: '正在处理中，请稍候...',
         icon: 'none'
@@ -569,11 +857,11 @@ export default function Workspace() {
       return
     }
 
-    // 设置处理状态
-    setIsProcessing(true)
+    // 设置发送状态，显示加载动画
+    setIsSending(true)
 
-    // 构建用户消息
-    const userMessage: Message = {
+    // 先保存用户消息数据，暂不添加到消息列表
+    const userTextMessage: Message = {
       id: Date.now().toString(),
       type: 'text',
       content: inputText.trim(),
@@ -581,32 +869,13 @@ export default function Workspace() {
       isUser: true
     }
 
-    // 先添加图片消息（如果有的话），再添加文本消息
-    const messagesToAdd = []
-    
-    if (uploadedImage) {
-      const imageMessage: Message = {
-        id: (Date.now() - 1).toString(),
-        type: 'image',
-        content: uploadedImage.url,
-        timestamp: Date.now() - 1,
-        isUser: true
-      }
-      messagesToAdd.push(imageMessage)
-    }
-    
-    messagesToAdd.push(userMessage)
-    setMessages(prev => [...prev, ...messagesToAdd])
-
-    // 显示AI正在处理的消息（只显示动画，不显示文本）
-    const processingMessage: Message = {
-      id: (Date.now() + 2).toString(),
-      type: 'loading',
-      content: '',
-      timestamp: Date.now(),
-      isUser: false
-    }
-    setMessages(prev => [...prev, processingMessage])
+    const userImageMessage: Message | null = uploadedImage ? {
+      id: (Date.now() - 1).toString(),
+      type: 'image',
+      content: uploadedImage.url,
+      timestamp: Date.now() - 1,
+      isUser: true
+    } : null
 
     try {
       // 调用API创建任务
@@ -616,25 +885,39 @@ export default function Workspace() {
       }
       
       // 如果有上传的图片，添加imageUrl
-      if (uploadedImage?.url) {
-        // 开发环境使用固定的线上图片URL
-        if (process.env.NODE_ENV === 'development') {
-          requestData.imageUrl = 'https://n.sinaimg.cn/sinakd20120/287/w894h993/20230131/6128-b0868578421793c38d18b1e229624512.jpg'
-        } else {
-          requestData.imageUrl = uploadedImage.url
-        }
+      if (uploadedImage && uploadedImage.url) {
+        requestData.imageUrl = uploadedImage.url
       }
 
-      console.log('创建任务请求数据:', requestData)
       const taskResponse = await GenerateService.createTask(requestData)
-      console.log('任务创建成功:', taskResponse)
-      
-      // 开始监听SSE状态更新
+
+      // API调用成功，恢复发送按钮状态，设置处理状态
+      setIsSending(false)
+      setIsProcessing(true)
+
+      // 现在添加用户消息到界面
+      const messagesToAdd = []
+      if (userImageMessage) {
+        messagesToAdd.push(userImageMessage)
+      }
+      messagesToAdd.push(userTextMessage)
+      setMessages(prev => [...prev, ...messagesToAdd])
+
+      // 显示AI正在处理的消息
+      const processingMessage: Message = {
+        id: (Date.now() + 2).toString(),
+        type: 'loading',
+        content: '',
+        timestamp: Date.now(),
+        isUser: false
+      }
+      setMessages(prev => [...prev, processingMessage])
+
+      // 开始监听任务状态更新 - SSE适配器自动检测环境
       const cleanup = GenerateService.listenToTaskStatus(
         taskResponse.taskId,
         {
           onConnected: (data) => {
-            console.log('SSE连接已建立:', data)
             // 不显示连接状态消息，直接保持原有的处理状态
           },
           onStatusUpdate: (data) => {
@@ -649,7 +932,8 @@ export default function Workspace() {
           onConnectionError: (error) => {
             handleConnectionError(error, processingMessage.id)
           }
-        }
+        },
+        taskResponse.sseUrl // 传递服务端返回的SSE URL
       )
 
       // 存储清理函数，以便在组件卸载时调用
@@ -660,15 +944,12 @@ export default function Workspace() {
       setUploadedImage(null)
       
     } catch (error) {
-      console.error('发送消息失败:', error)
-      
-      // 重置处理状态
+
+      // 重置所有状态
+      setIsSending(false)
       setIsProcessing(false)
-      
-      // 移除加载消息
-      setMessages(prev => prev.filter(msg => msg.id !== processingMessage.id))
-      
-      // 显示错误提示
+
+      // API调用失败，不添加用户消息，直接显示错误提示
       const errorMessage = error instanceof Error ? error.message : '发送失败，请重试'
       Taro.showToast({
         title: errorMessage,
@@ -683,13 +964,41 @@ export default function Workspace() {
     setUploadedImage(null)
   }
 
-  // 处理图片预览
+  // 处理图片预览 - 显示预览弹窗
   const handleImagePreview = (url: string, messageId: string): void => {
-    // 其他情况正常预览
-    Taro.previewImage({
-      urls: [url],
-      current: url
-    })
+    // 查找对应的作品数据
+    const workData = generatedWorksData.get(messageId)
+
+    if (workData) {
+      // 如果有完整的作品数据，使用预览弹窗
+      setSelectedWork(workData)
+      setPreviewModalVisible(true)
+    } else {
+      // 如果没有作品数据，使用原生图片预览
+      Taro.previewImage({
+        urls: [url],
+        current: url
+      })
+    }
+  }
+
+  // 关闭预览弹窗
+  const handleClosePreviewModal = (): void => {
+    setPreviewModalVisible(false)
+    setSelectedWork(null)
+  }
+
+  // 处理下载（从弹窗中触发）
+  const handleDownloadFromModal = async (workData: WorkPreviewData): Promise<void> => {
+    try {
+      await DownloadManager.downloadImage(workData.gifUrl)
+    } catch (error) {
+      // 下载失败时显示错误提示
+      Taro.showToast({
+        title: '下载失败',
+        icon: 'error'
+      })
+    }
   }
 
   // 处理demo卡片点击
@@ -701,7 +1010,7 @@ export default function Workspace() {
         // 创建示例图片对象
         const exampleImage: UploadedImage = {
           id: 'demo-' + Date.now().toString(),
-          url: demoExample?.imageUrl || '',
+          url: (demoExample && demoExample.imageUrl) || '',
           name: '示例图片.jpg',
           size: 2048000, // 模拟大小 2MB
           width: 1024,
@@ -727,8 +1036,7 @@ export default function Workspace() {
   // 处理状态更新事件
   const handleStatusUpdate = (data: any, messageId: string) => {
     const { status, progress } = data
-    console.log('任务状态更新:', data , status, progress)
-    
+
     let statusText = '正在处理...'
     if (status === 'processing') {
       statusText = `正在生成中... ${progress}%`
@@ -737,10 +1045,10 @@ export default function Workspace() {
     } else if (status === 'completed') {
       statusText = '任务已完成，正在生成结果...'
     }
-    
+
     // 更新处理消息
-    setMessages(prev => prev.map(msg => 
-      msg.id === messageId 
+    setMessages(prev => prev.map(msg =>
+      msg.id === messageId
         ? { ...msg, content: statusText }
         : msg
     ))
@@ -749,14 +1057,11 @@ export default function Workspace() {
   // 处理任务完成事件
   const handleTaskFinished = (data: any, messageId: string) => {
     const { status, gifUrl, error, errorCode, gifFileSize, gifWidth, gifHeight, actualDuration } = data
-    console.log('任务完成:', data)
-    console.log('status:', status, 'gifUrl:', gifUrl)
-    
+
     // 重置处理状态
     setIsProcessing(false)
-    
+
     if (status === 'completed' && gifUrl) {
-      console.log('生成成功，显示GIF:', gifUrl)
       // 任务成功完成，显示生成的GIF
       const successMessage: Message = {
         id: (Date.now() + 3).toString(),
@@ -765,26 +1070,38 @@ export default function Workspace() {
         timestamp: Date.now(),
         isUser: false
       }
-      
-      // 移除处理消息，添加成功消息
-      setMessages(prev => {
-        console.log('更新消息列表，移除messageId:', messageId, '添加新消息:', successMessage)
-        return [
-          ...prev.filter(msg => msg.id !== messageId),
-          successMessage
-        ]
+
+      // 保存生成的作品数据，用于预览弹窗
+      const workData: WorkPreviewData = {
+        id: successMessage.id,
+        gifUrl: gifUrl,
+        originalImageUrl: uploadedImage?.url,
+        prompt: inputText, // 使用当前的输入文本作为提示词
+        createdAt: new Date().toISOString(),
+        gifFileSize: gifFileSize,
+        gifWidth: gifWidth,
+        gifHeight: gifHeight,
+        actualDuration: actualDuration
+      }
+
+      setGeneratedWorksData(prev => {
+        const newMap = new Map(prev)
+        newMap.set(successMessage.id, workData)
+        return newMap
       })
-      
-      // 显示成功提示，包含文件信息
-      const fileInfo = `生成完成！文件大小: ${(gifFileSize / 1024 / 1024).toFixed(2)}MB, 尺寸: ${gifWidth}x${gifHeight}, 时长: ${actualDuration}秒`
+
+      // 移除处理消息，添加成功消息
+      setMessages(prev => [
+        ...prev.filter(msg => msg.id !== messageId),
+        successMessage
+      ])
+
+      // 显示成功提示
       Taro.showToast({
         title: '生成完成！',
         icon: 'success'
       })
-      
-      console.log(fileInfo)
     } else if (status === 'failed') {
-      console.log('生成失败:', error)
       // 任务失败
       const errorMessage = error || '生成失败'
       const errorDetails = errorCode ? ` (错误代码: ${errorCode})` : ''
@@ -800,26 +1117,23 @@ export default function Workspace() {
         title: '生成失败',
         icon: 'none'
       })
-    } else {
-      console.log('未知状态或缺少gifUrl:', status, gifUrl)
     }
   }
 
   // 处理任务错误事件
   const handleTaskError = (data: any, messageId: string) => {
     const { error } = data
-    console.error('SSE错误:', error)
-    
+
     // 重置处理状态
     setIsProcessing(false)
-    
+
     // 更新处理消息为错误状态
-    setMessages(prev => prev.map(msg => 
-      msg.id === messageId 
+    setMessages(prev => prev.map(msg =>
+      msg.id === messageId
         ? { ...msg, content: `发生错误: ${error}` }
         : msg
     ))
-    
+
     Taro.showToast({
       title: '发生错误',
       icon: 'none'
@@ -828,7 +1142,6 @@ export default function Workspace() {
 
   // 处理连接错误事件
   const handleConnectionError = (error: Error, messageId: string) => {
-    console.error('SSE连接错误:', error)
     
     // 重置处理状态
     setIsProcessing(false)
@@ -848,7 +1161,7 @@ export default function Workspace() {
 
 
   return (
-    <View className='workspace'>
+    <View className='workspace' onClick={handlePageClick}>
       {/* 头部LOGO */}
       <View className='header'>
         <View className='creativity-logo'>
@@ -880,10 +1193,9 @@ export default function Workspace() {
                   <View className='ai-avatar'>
                     <Image
                       className='avatar-image'
-                      src={require('../../assets/robot-avatar.png')}
+                      src='https://img.52725.uno/assets/robot-avatar.png'
                       mode='aspectFit'
                       onError={(e) => {
-                        console.error('Robot avatar loading failed')
                         // 用小图标替换失败的机器人头像
                         const imgElement = e.currentTarget
                         if (imgElement && imgElement.parentElement) {
@@ -899,7 +1211,7 @@ export default function Workspace() {
                   </View>
                 )}
                 
-                <View className={`message-bubble ${message.isUser ? 'chat-bubble-right' : 'chat-bubble-left'}`}>
+                <View className={`message-bubble ${message.isUser ? 'chat-bubble-right' : 'chat-bubble-left'} ${message.type === 'image' ? 'image-bubble' : ''} ${message.type === 'demo-card' ? 'demo-bubble' : ''}`}>
                   {message.type === 'text' ? (
                     <Text className='bubble-text'>{message.content}</Text>
                   ) : message.type === 'loading' ? (
@@ -918,29 +1230,24 @@ export default function Workspace() {
                           <>
                             <video 
                               className='demo-video' 
-                              src={message.demoData?.videoUrl || ''} 
-                              poster={demoExample?.imageUrl || ''}
+                              src={(message.demoData && message.demoData.videoUrl) || ''} 
+                              poster={(demoExample && demoExample.imageUrl) || ''}
                               autoPlay
                               loop
                               muted
                               playsInline
                               style={{
                                 width: '100%',
-                                height: '180px',
-                                objectFit: 'cover'
-                              }}
-                              onLoadedData={() => {
-                                console.log('Demo video loaded successfully')
+                                height: '100%',
+                                objectFit: 'contain',
+                                display: 'block'
                               }}
                               onError={(e) => {
-                                console.error('Demo video error:', e)
-                                console.error('Video URL:', message.demoData?.videoUrl)
-                                console.error('Poster URL:', demoExample?.imageUrl)
                                 // 隐藏video元素，显示fallback
                                 const videoElement = e.target as HTMLVideoElement
                                 if (videoElement) {
                                   videoElement.style.display = 'none'
-                                  const fallbackElement = videoElement.parentElement?.querySelector('.demo-video-fallback') as HTMLDivElement
+                                  const fallbackElement = (videoElement.parentElement && videoElement.parentElement.querySelector('.demo-video-fallback')) as HTMLDivElement
                                   if (fallbackElement) {
                                     fallbackElement.style.display = 'flex'
                                   }
@@ -950,8 +1257,11 @@ export default function Workspace() {
                             <View
                               className='demo-video-fallback'
                               style={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
                                 width: '100%',
-                                height: '180px',
+                                height: '100%',
                                 display: 'none',
                                 flexDirection: 'column',
                                 alignItems: 'center',
@@ -966,8 +1276,8 @@ export default function Workspace() {
                         ) : (
                           <Video 
                             className='demo-video' 
-                            src={message.demoData?.videoUrl || ''} 
-                            poster={demoExample?.imageUrl || ''}
+                            src={(message.demoData && message.demoData.videoUrl) || ''} 
+                            poster={(demoExample && demoExample.imageUrl) || ''}
                             controls={false}
                             autoplay={true}
                             loop={true}
@@ -976,100 +1286,38 @@ export default function Workspace() {
                             showCenterPlayBtn={false}
                             showProgress={false}
                             showFullscreenBtn={false}
-                            objectFit='contain'
+                            objectFit='cover'
                           />
                         )}
-                        <View className='demo-play-overlay' onClick={() => {
-                          const videoElement = document.querySelector(`video[src*="${message.demoData?.videoUrl?.split('/').pop()}"]`) as HTMLVideoElement
-                          if (videoElement) {
-                            if (videoElement.paused) {
-                              videoElement.play().catch(e => console.log('Manual play prevented:', e))
-                            } else {
-                              videoElement.pause()
-                            }
-                          }
-                        }}>
-                          <View className='demo-play-button'>
-                            <Text className='demo-play-icon'>▶</Text>
-                          </View>
-                        </View>
                       </View>
-                      <Text className='demo-prompt'>{message.demoData?.prompt}</Text>
+                      <Text className='demo-prompt'>{message.demoData && message.demoData.prompt}</Text>
                       <View className='demo-action-hint'>
                         <Text className='demo-hint-text'>👆 点击卡片快速体验</Text>
                       </View>
                     </View>
+                  ) : message.type === 'image' ? (
+                    <AdaptiveImageBubble
+                      src={message.content}
+                      alt='Generated image'
+                      onClick={() => handleImagePreview(message.content, message.id)}
+                      isH5={isH5}
+                    />
                   ) : (
-                    <View className='bubble-image-container'>
-                      {isH5 ? (
-                        <>
-                          <img
-                            className='bubble-image'
-                            src={message.content}
-                            alt='Generated image'
-                            style={{
-                              width: '100%',
-                              maxHeight: '300px',
-                              objectFit: 'contain',
-                              cursor: 'pointer'
-                            }}
-                            onClick={() => handleImagePreview(message.content, message.id)}
-                            onError={(e) => {
-                              console.error('Image loading failed:', message.content)
-                              // 隐藏原图片，显示fallback元素
-                              const imgElement = e.target as HTMLImageElement
-                              if (imgElement) {
-                                imgElement.style.display = 'none'
-                                const fallbackElement = imgElement.nextElementSibling as HTMLDivElement
-                                if (fallbackElement) {
-                                  fallbackElement.style.display = 'flex'
-                                }
-                              }
-                            }}
-                          />
-                          <View
-                            className='bubble-image-fallback'
-                            style={{ display: 'none' }}
-                            onClick={() => handleImagePreview(message.content, message.id)}
-                          >
-                            <Text className='fallback-icon'>🖼️</Text>
-                          </View>
-                        </>
-                      ) : (
-                        <Image
-                          className='bubble-image'
-                          src={message.content}
-                          mode='aspectFit'
-                          onClick={() => handleImagePreview(message.content, message.id)}
-                          onError={() => {
-                            console.error('Image loading failed:', message.content)
-                            // 小程序环境：将Image组件替换为小图标显示
-                            const imgElement = e.currentTarget
-                            if (imgElement && imgElement.parentElement) {
-                              imgElement.style.display = 'none'
-                              // 创建fallback图标
-                              const fallbackIcon = document.createElement('text')
-                              fallbackIcon.textContent = '🖼️'
-                              fallbackIcon.style.fontSize = '20px'
-                              fallbackIcon.style.textAlign = 'center'
-                              imgElement.parentElement.appendChild(fallbackIcon)
-                            }
-                          }}
-                        />
-                      )}
+                    <View className='bubble-unknown-type'>
+                      <Text>未知消息类型: {message.type}</Text>
+                      <Text>内容: {message.content}</Text>
                     </View>
                   )}
                 </View>
 
                 {message.isUser && (
                   <View className='user-avatar'>
-                    {userState.user?.userAvatar ? (
+                    {(userState.user && userState.user.userAvatar) ? (
                       <Image
                         className='avatar-image'
                         src={userState.user.userAvatar}
                         mode='aspectFit'
                         onError={(e) => {
-                          console.error('User avatar loading failed:', userState.user?.userAvatar)
                           // 用小图标替换失败的用户头像
                           const imgElement = e.currentTarget
                           if (imgElement && imgElement.parentElement) {
@@ -1092,11 +1340,13 @@ export default function Workspace() {
 
           </View>
         )}
+        {/* 消息列表底部锚点，用于自动滚动 */}
+        <View ref={messagesEndRef} className='messages-end'></View>
       </View>
 
 
       {/* 输入区域 */}
-      <View className='input-area' style={{ bottom: `${tabBarHeight}px` }}>
+      <View className='input-area' style={{ bottom: isH5 ? `${tabBarHeight}px` : '2px' }} onClick={(e) => e.stopPropagation()}>
         <View className='input-container'>
           <View className='input-card'>
             {/* 主输入区域 - 横向布局 */}
@@ -1110,7 +1360,6 @@ export default function Workspace() {
                       src={uploadedImage.url}
                       mode='aspectFit'
                       onError={(e) => {
-                        console.error('Uploaded image display failed:', uploadedImage.url)
                         // 用小图标替换失败的上传图片预览
                         const imgElement = e.currentTarget
                         if (imgElement && imgElement.parentElement) {
@@ -1140,6 +1389,7 @@ export default function Workspace() {
               {/* 中间文本输入区域 */}
               <View className='text-input-wrapper'>
                 <Textarea
+                  ref={textareaRef}
                   className='main-text-input'
                   value={inputText}
                   onInput={handleInputChange}
@@ -1148,6 +1398,11 @@ export default function Workspace() {
                   maxlength={300}
                   showConfirmBar={false}
                   autoHeight={false}
+                  adjustPosition={true}
+                  holdKeyboard={true}
+                  cursorSpacing={20}
+                  onFocus={handleInputFocus}
+                  onBlur={handleInputBlur}
                 />
               </View>
             </View>
@@ -1160,7 +1415,7 @@ export default function Workspace() {
                   <Text className='dropdown-arrow'>{showStyleDropdown ? '▲' : '▼'}</Text>
                   
                   {/* 向上弹出的选项列表 */}
-                  {showStyleDropdown && generateConfig?.styles && (
+                  {showStyleDropdown && generateConfig && generateConfig.styles && (
                     <View className='style-options'>
                       {Object.entries(generateConfig.styles).map(([label, value]) => (
                         <View 
@@ -1181,8 +1436,15 @@ export default function Workspace() {
               
               {/* 发送按钮 */}
               <View className='send-button-wrapper'>
-                <View className='function-btn send-btn' onClick={handleSendMessage}>
-                  <Text className='function-btn-icon'>➤</Text>
+                <View
+                  className={`function-btn send-btn ${isSending ? 'loading' : ''}`}
+                  onClick={handleSendMessage}
+                >
+                  {isSending ? (
+                    <View className='loading-spinner'></View>
+                  ) : (
+                    <Text className='function-btn-icon'>➤</Text>
+                  )}
                 </View>
               </View>
             </View>
@@ -1190,6 +1452,13 @@ export default function Workspace() {
         </View>
       </View>
 
+      {/* 作品预览弹窗 */}
+      <WorkPreviewModal
+        isOpened={previewModalVisible}
+        workData={selectedWork}
+        onClose={handleClosePreviewModal}
+        onDownload={handleDownloadFromModal}
+      />
     </View>
   )
 }

@@ -1,5 +1,6 @@
 import Taro from '@tarojs/taro';
 import { RequestService } from '../utils/request';
+import { CookieManager } from '../utils/cookieManager';
 import { LoginForm, RegisterForm, AuthResponse, EmailVerificationParams, UserProfile } from '../../types/auth';
 
 export class AuthService {
@@ -52,6 +53,12 @@ export class AuthService {
     } finally {
       // 清除本地用户信息
       Taro.removeStorageSync('userId');
+
+      // 在小程序环境下清除所有Cookie
+      if (CookieManager.isManualCookieRequired()) {
+        CookieManager.clearAllCookies();
+        console.log('小程序环境: 登出时已清除所有Cookie');
+      }
     }
   }
 

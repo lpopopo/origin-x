@@ -385,8 +385,8 @@
 .message-wrapper {
   display: flex;
   align-items: flex-start;
-  margin-bottom: 16px;
-  gap: 12px;
+  margin-bottom: 18px;
+  gap: 14px;
 }
 
 .user-message-wrapper {
@@ -442,30 +442,57 @@
 /* 聊天气泡样式 */
 .message-bubble {
   max-width: 75%;
-  padding: 12px 16px;
+  padding: 10px 14px;
   position: relative;
   width: fit-content;
+  height: fit-content;
+  min-height: unset;
+}
+
+/* 图片消息气泡样式 - 添加内边距 */
+.message-bubble.image-bubble {
+  padding: 8px;
+  overflow: visible;
+}
+
+/* Demo卡片消息气泡样式 - 更大宽度 */
+.message-bubble.demo-bubble {
+  max-width: 70%; /* 设置最大宽度为70% */
+  padding: 0; /* Demo卡片内部自己处理padding */
 }
 
 .chat-bubble-left {
   background: @bg-card;
   border-radius: 4px 16px 16px 16px;
   box-shadow: @shadow-sm;
+  height: fit-content;
 }
 
 .chat-bubble-right {
   background: @primary-color;
   border-radius: 16px 4px 16px 16px;
   color: white;
+  height: fit-content;
+  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3), 0 2px 6px rgba(74, 144, 226, 0.2);
 }
 
 .bubble-text {
   font-size: 14px;
-  line-height: 1.5;
+  line-height: 1.4;
   color: inherit;
   word-wrap: break-word;
   width: fit-content;
   min-width: 0;
+  margin: 0;
+  padding: 0;
+  vertical-align: top;
+  display: block;
+
+  /* 小程序环境特殊处理 */
+  .taro_page & {
+    line-height: 1.3;
+    display: inline;
+  }
 }
 
 .chat-bubble-right .bubble-text {
@@ -479,37 +506,131 @@
 /* 消息图片样式 */
 .bubble-image-container {
   border-radius: 8px;
-  overflow: hidden;
-  max-width: 300px;
-  width: fit-content;
+  width: 300px;
+  height: 200px;
   position: relative;
+  background: transparent;
+  overflow: visible; /* 改为visible确保图片能显示 */
 }
 
 .bubble-image {
-  width: 100%;
-  height: auto;
+  width: 300px;
+  height: 200px;
   border-radius: 8px;
-  max-width: 300px;
   display: block;
+  object-fit: cover; /* 确保图片填充容器 */
 }
 
 /* 图片加载失败的fallback样式 */
 .bubble-image-fallback {
   display: none;
-  width: 100%;
-  min-height: 200px;
-  background-color: transparent;
-  border: none;
+  width: 300px;
+  height: 200px;
+  background-color: #f8f9fa;
+  border: 2px dashed #dee2e6;
   border-radius: 8px;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: #999;
+  color: #6c757d;
   cursor: pointer;
 
   .fallback-icon {
-    font-size: 20px;
+    font-size: 32px;
     opacity: 0.8;
+    margin-bottom: 8px;
+  }
+
+  .fallback-text {
+    font-size: 14px;
+    opacity: 0.8;
+  }
+}
+
+/* 自适应图片容器样式 */
+.adaptive-image-container {
+  position: relative;
+  border-radius: 8px;
+  background: transparent;
+  overflow: hidden;
+  max-width: 100%;
+  transition: all 0.3s ease;
+}
+
+/* 用户图片消息的容器样式 */
+.user-message-wrapper .adaptive-image-container {
+  border-radius: 6px; /* 稍小的圆角与气泡内部保持协调 */
+}
+
+.adaptive-bubble-image {
+  border-radius: 8px;
+  display: block;
+  object-fit: contain; /* 保持图片比例，完整显示 */
+  max-width: 100%;
+  height: auto;
+  transition: opacity 0.3s ease;
+}
+
+/* 用户消息中的图片圆角调整 */
+.user-message-wrapper .adaptive-bubble-image {
+  border-radius: 6px; /* 与容器保持一致的圆角 */
+}
+
+.adaptive-bubble-image:hover {
+  transform: scale(1.02);
+  transition: transform 0.2s ease;
+}
+
+/* 自适应图片加载失败样式 */
+.adaptive-image-fallback {
+  display: flex;
+  background-color: #f8f9fa;
+  border: 2px dashed #dee2e6;
+  border-radius: 8px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #6c757d;
+  cursor: pointer;
+  min-height: 150px;
+
+  .fallback-icon {
+    font-size: 32px;
+    margin-bottom: 8px;
+  }
+
+  .fallback-text {
+    font-size: 14px;
+    color: #999;
+  }
+}
+
+/* 自适应图片加载状态 */
+.adaptive-image-loading {
+  display: flex;
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+
+  .loading-text {
+    font-size: 14px;
+    color: #6c757d;
+    animation: pulse 1.5s ease-in-out infinite alternate;
+  }
+}
+
+@keyframes pulse {
+  from {
+    opacity: 0.5;
+  }
+  to {
+    opacity: 1;
   }
 }
 
@@ -523,10 +644,11 @@
 
 /* Demo卡片样式 */
 .demo-card {
-  width: 100%;
-  max-width: 100%;
+  width: 100%; /* 填充整个气泡宽度 */
+  padding: 12px; /* 添加内边距 */
   cursor: pointer;
   transition: all 0.2s ease;
+  box-sizing: border-box; /* 确保padding包含在宽度内 */
 }
 
 .demo-card:hover {
@@ -542,16 +664,29 @@
   color: @text-primary;
   margin-bottom: 12px;
   font-weight: 500;
+  line-height: 1.2;
+  margin: 0;
+  padding: 0;
+  vertical-align: top;
+  display: block;
+
+  /* 小程序环境特殊处理 */
+  .taro_page & {
+    line-height: 1.1;
+    display: inline;
+  }
 }
 
 .demo-video-container {
   position: relative;
-  width: 100%;
+  width: 100%; /* 自适应气泡宽度 */
+  aspect-ratio: 4 / 3; /* 保持4:3比例 */
   border-radius: 12px;
   overflow: hidden;
   cursor: pointer;
   transition: all 0.3s ease;
-  margin-bottom: 12px;
+  margin-bottom: 6px; /* 缩小与提示词的距离 */
+  background: #f8f9fa; /* 添加背景色便于调试 */
 }
 
 .demo-video-container:hover {
@@ -559,66 +694,52 @@
 }
 
 .demo-video {
-  width: 100%;
-  height: 180px;
-  object-fit: cover;
+  width: 100%; /* 填充容器宽度 */
+  height: 100%; /* 填充容器高度 */
+  display: block; /* 确保display正确 */
+  object-fit: contain; /* 完整显示，保持比例，居中 */
 }
 
-.demo-play-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(45deg, rgba(74, 144, 226, 0.8), rgba(107, 182, 255, 0.8));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.demo-video-container:hover .demo-play-overlay {
-  opacity: 1;
-}
-
-.demo-play-button {
-  width: 60px;
-  height: 60px;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-}
-
-.demo-play-icon {
-  font-size: 24px;
-  color: @primary-color;
-  margin-left: 4px;
-}
 
 .demo-prompt {
   font-size: 13px;
   color: @text-secondary;
-  line-height: 1.4;
+  line-height: 1.2;
   background: rgba(74, 144, 226, 0.05);
-  padding: 8px 12px;
+  padding: 10px 14px;
   border-radius: 8px;
   border: 1px solid rgba(74, 144, 226, 0.1);
-  margin-bottom: 8px;
+  margin-bottom: 10px;
+  vertical-align: top;
+  display: block;
+
+  /* 小程序环境特殊处理 */
+  .taro_page & {
+    line-height: 1.1;
+    display: inline;
+  }
 }
 
 .demo-action-hint {
   text-align: center;
-  padding: 6px 0;
+  padding: 8px 0;
 }
 
 .demo-hint-text {
   font-size: 12px;
   color: @primary-color;
   font-weight: 500;
+  line-height: 1.2;
+  margin: 0;
+  padding: 0;
+  vertical-align: top;
+  display: block;
+
+  /* 小程序环境特殊处理 */
+  .taro_page & {
+    line-height: 1.1;
+    display: inline;
+  }
 }
 
 /* AI输入动态效果 - 5个圆圈动画 */
@@ -1122,7 +1243,7 @@
   color: #374151;
   outline: none;
   min-height: 60px;
-  max-height: calc(16px * 1.5 * 10 + 32px); /* 10行：字体大小 * 行高 * 10行 + 上下padding */
+  max-height: 272px;
   line-height: 1.5;
   transition: all 0.2s ease;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
@@ -1154,6 +1275,12 @@
   color: #666;
   text-align: center;
   line-height: 1.4;
+}
+
+/* 消息列表底部锚点样式 */
+.messages-end {
+  height: 1px;
+  width: 100%;
 }
 
 /* 弹窗底部 */
@@ -1226,6 +1353,17 @@
   flex: none;
 }
 
+/* Demo卡片移动端适配 */
+@media (max-width: @breakpoint-md) {
+  .message-bubble.demo-bubble {
+    max-width: 80%; /* 移动端最大宽度80% */
+  }
+
+  .demo-card {
+    padding: 10px; /* 移动端减小内边距 */
+  }
+}
+
 /* 移动端适配 */
 @media (max-width: @breakpoint-md) {
   .main-content {
@@ -1233,8 +1371,8 @@
   }
   
   .input-area {
-    padding: 12px;
-    bottom: var(--tabbar-height, 50px);
+    padding: 0 12px; /* 移动端也完全移除上下padding */
+    bottom: var(--tabbar-height, 50px); /* 移动端也统一使用tabbar高度 */
   }
   
   .input-card {
@@ -1263,7 +1401,25 @@
   .main-text-input {
     height: 80px; /* 固定高度 */
     font-size: 16px; /* 防止iOS缩放 */
-    padding: 10px 14px;
+    padding: 6px 14px 10px 14px; /* 减少上内边距，让移动端文本起始位置也更靠上 */
+  }
+
+  /* 移动端小程序环境特殊处理 */
+  .taro_page .main-text-input,
+  .taro-text-area .main-text-input {
+    padding: 0px 14px 10px 14px; /* 小程序移动端也去掉上内边距 */
+    margin-top: -4px; /* 移动端也需要更大的负边距 */
+    line-height: 1.2; /* 移动端也使用更紧凑的行高 */
+  }
+
+  .taro_page textarea.main-text-input {
+    padding-top: 0 !important;
+    margin-top: -6px !important; /* 移动端textarea特殊处理 */
+    vertical-align: top !important;
+  }
+
+  .taro_page .text-input-wrapper {
+    padding-top: 4px; /* 移动端包装器上边距更小 */
   }
   
   .function-buttons {
@@ -1388,10 +1544,10 @@
 /* 新的输入区域样式 - 基于原型图横向布局 */
 .input-area {
   position: fixed;
-  bottom: var(--tabbar-height, 50px);
+  bottom: var(--tabbar-height, 50px); /* 统一使用tabbar高度 */
   left: 0;
   right: 0;
-  padding: 16px;
+  padding: 0 16px; /* 完全移除上下padding */
   z-index: 1000;
 }
 
@@ -1408,6 +1564,7 @@
   border: 1px solid #e5e7eb;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
   overflow: hidden;
+  margin: 0; /* 确保没有外边距 */
 }
 
 /* 图片上传容器内的图片显示 */
@@ -1457,7 +1614,7 @@
 /* 主输入区域 - 横向布局 */
 .input-main-section {
   display: flex;
-  align-items: flex-start;
+  align-items: flex-start; /* 确保所有元素从顶部对齐 */
   padding: 16px;
   gap: 12px;
 }
@@ -1513,16 +1670,80 @@
 .main-text-input {
   width: 100%;
   height: 100px; /* 增加高度，约5-6行文字 */
-  padding: 12px 16px;
+  padding: 6px 16px 12px 16px; /* 进一步减少上内边距 */
   background: transparent;
   border: none;
   outline: none;
   font-size: 16px;
-  line-height: 1.5;
+  line-height: 1.4; /* 稍微增加行高提升可读性 */
   color: #374151;
   resize: none;
   box-sizing: border-box;
   overflow-y: auto; /* 显示滚动条 */
+  vertical-align: top; /* 防止文本垂直居中 */
+}
+
+/* 小程序环境特殊处理 - 修正文本起始位置 */
+.taro_page .main-text-input,
+.taro-text-area .main-text-input {
+  padding: 0px 16px 12px 16px; /* 小程序中完全去掉上内边距 */
+  margin-top: -6px; /* 进一步向上调整，抵消小程序默认的上边距 */
+  line-height: 1.2; /* 更紧凑的行高 */
+
+  /* 小程序键盘弹出时的优化 */
+  cursor-spacing: 20px; /* 光标与键盘的距离 */
+  confirm-type: done; /* 键盘右下角按钮显示"完成" */
+  confirm-hold: true; /* 点击键盘右下角按钮时是否保持键盘不收起 */
+}
+
+/* 小程序Textarea组件特殊样式重置 */
+.taro_page textarea.main-text-input {
+  /* 重置小程序textarea的默认样式 */
+  padding-top: 0 !important;
+  margin-top: -8px !important; /* 更大的负边距 */
+  vertical-align: top !important;
+
+  /* 确保文本从真正的顶部开始 */
+  display: block !important;
+  box-sizing: border-box !important;
+}
+
+/* 小程序中的文本区域包装器调整 */
+.taro_page .text-input-wrapper {
+  padding-top: 6px; /* 在包装器层面添加上边距 */
+}
+
+/* 小程序输入区域整体优化 */
+.taro_page .input-area {
+  /* 确保输入区域在键盘弹出时有足够的滚动空间 */
+  margin-bottom: 20px;
+}
+
+/* 小程序页面底部留出更多空间 */
+.taro_page .main-content {
+  padding-bottom: calc(var(--input-area-bottom-space, 190px) + 100px); /* 额外增加100px空间 */
+}
+
+/* 更强力的小程序Textarea重置 - 针对原生textarea元素 */
+.taro_page .text-input-wrapper textarea,
+.taro_page .main-text-input textarea,
+.taro_page textarea[class*="main-text-input"] {
+  padding: 0 16px 12px 16px !important;
+  margin: -10px 0 0 0 !important; /* 使用更大的负边距强制重置 */
+  line-height: 1.2 !important;
+  vertical-align: top !important;
+  box-sizing: border-box !important;
+
+  /* 重置可能的默认样式 */
+  border: none !important;
+  outline: none !important;
+  background: transparent !important;
+}
+
+/* 小程序环境下的调试边框 - 帮助查看边界 */
+.taro_page .main-text-input {
+  /* 可以临时添加边框查看实际边界 */
+  /* border: 1px solid red !important; */
 }
 
 .main-text-input::-webkit-scrollbar {
@@ -1654,7 +1875,7 @@
 /* 向上弹出的选项列表 */
 .style-options {
   position: absolute;
-  bottom: calc(100% + 4px); /* 改为向上弹出 */
+  bottom: 104%;
   left: 0;
   right: 0;
   background: #ffffff;
@@ -1714,4 +1935,32 @@
 
 .send-btn:active {
   transform: translateY(0);
+}
+
+/* 发送按钮加载状态 */
+.send-btn.loading {
+  pointer-events: none; /* 禁用点击 */
+  background: linear-gradient(135deg, #6b7280 0%, #9ca3af 100%); /* 灰色背景 */
+  box-shadow: 0 2px 8px rgba(107, 114, 128, 0.3);
+}
+
+.send-btn.loading:hover {
+  transform: none; /* 禁用hover效果 */
+  background: linear-gradient(135deg, #6b7280 0%, #9ca3af 100%);
+  box-shadow: 0 2px 8px rgba(107, 114, 128, 0.3);
+}
+
+/* 加载旋转动画 */
+.loading-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }

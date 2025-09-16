@@ -8,7 +8,7 @@ export default defineAppConfig({
   window: {
     backgroundTextStyle: 'light',
     navigationBarBackgroundColor: '#fff',
-    navigationBarTitleText: 'Origin-X',
+    navigationBarTitleText: '表情包动起来',
     navigationBarTextStyle: 'black'
   },
   tabBar: {

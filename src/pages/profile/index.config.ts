@@ -3,6 +3,6 @@ export default {
   navigationBarBackgroundColor: '#ffffff',
   navigationBarTextStyle: 'black',
   backgroundColor: '#f8f9fa',
-  enablePullDownRefresh: false,
+  enablePullDownRefresh: true,
   onReachBottomDistance: 50,
 }

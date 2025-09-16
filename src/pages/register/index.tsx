@@ -1,5 +1,5 @@
 import { View, Input, Button, Text } from '@tarojs/components';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Taro from '@tarojs/taro';
 import { RegisterForm } from '../../../types/auth';
 import { AuthService } from '../../services/auth';
@@ -15,11 +15,38 @@ const Register: React.FC = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [verificationStep, setVerificationStep] = useState<'form' | 'verification' | 'verified'>('form');
+  const [step, setStep] = useState<'form' | 'verification'>('form');
   const [verificationCode, setVerificationCode] = useState('');
   const [sendingCode, setSendingCode] = useState(false);
   const [countdown, setCountdown] = useState(0);
+  const [isVerified, setIsVerified] = useState(false);
   const { fetchUserProfile } = useUser();
+  const countdownTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // H5环境下设置页面标题和logo
+  useEffect(() => {
+    if (Taro.getEnv() === Taro.ENV_TYPE.WEB) {
+      document.title = '注册 - 表情包动起来';
+      const favicon = document.querySelector('link[rel="icon"]') as HTMLLinkElement;
+      if (favicon) {
+        favicon.href = '/assets/logo.png';
+      } else {
+        const newFavicon = document.createElement('link');
+        newFavicon.rel = 'icon';
+        newFavicon.href = '/assets/logo.png';
+        document.head.appendChild(newFavicon);
+      }
+    }
+  }, []);
+
+  // 清理计时器
+  useEffect(() => {
+    return () => {
+      if (countdownTimerRef.current) {
+        clearInterval(countdownTimerRef.current);
+      }
+    };
+  }, []);
 
   const handleInput = (field: keyof RegisterForm, value: string) => {
     setForm(prev => ({ ...prev, [field]: value }));
@@ -56,50 +83,53 @@ const Register: React.FC = () => {
   };
 
   const handleSendVerificationCode = async () => {
-    if (!form.email) {
-      setError('请先输入邮箱地址');
-      return;
-    }
-
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
-      setError('请输入有效的邮箱地址');
-      return;
-    }
+    // 防止重复点击
+    if (!validateForm() || sendingCode || countdown > 0) return;
 
     try {
       setSendingCode(true);
       setError('');
-      
-      await AuthService.sendVerificationCode(form.email);
-      
-      // 开始倒计时
-      setCountdown(60);
-      const timer = setInterval(() => {
+
+      const response = await AuthService.sendVerificationCode(form.email);
+
+      // 清理旧的计时器
+      if (countdownTimerRef.current) {
+        clearInterval(countdownTimerRef.current);
+      }
+
+      // 使用接口返回的expiresIn值开始倒计时
+      const expiresIn = (response && response.data && response.data.expiresIn) || 300; // 默认5分钟
+      setCountdown(expiresIn);
+      countdownTimerRef.current = setInterval(() => {
         setCountdown(prev => {
           if (prev <= 1) {
-            clearInterval(timer);
+            if (countdownTimerRef.current) {
+              clearInterval(countdownTimerRef.current);
+              countdownTimerRef.current = null;
+            }
             return 0;
           }
           return prev - 1;
         });
       }, 1000);
 
-      // 进入验证步骤
-      setVerificationStep('verification');
+      // 切换到验证步骤
+      setStep('verification');
 
       Taro.showToast({
-        title: '验证码已发送',
+        title: (response && response.data && response.data.message) || '验证码已发送',
         icon: 'success',
         duration: 2000
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : '发送验证码失败，请稍后重试');
+      setCountdown(0); // 发送失败时重置倒计时
     } finally {
       setSendingCode(false);
     }
   };
 
-  const handleVerifyCode = async () => {
+  const handleVerifyAndRegister = async () => {
     if (!verificationCode) {
       setError('请输入验证码');
       return;
@@ -108,30 +138,12 @@ const Register: React.FC = () => {
     try {
       setLoading(true);
       setError('');
-      
+
+      // 先验证邮箱验证码
       await AuthService.verifyCode(form.email, verificationCode);
-      
-      // 验证通过，显示成功提示
-      Taro.showToast({
-        title: '邮箱验证成功',
-        icon: 'success',
-        duration: 2000
-      });
-      
-      // 验证成功后，显示注册按钮
-      setVerificationStep('verified');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '验证码错误，请重新输入');
-    } finally {
-      setLoading(false);
-    }
-  };
+      setIsVerified(true);
 
-  const handleRegister = async () => {
-    if (!validateForm()) return;
-
-    try {
-      setLoading(true);
+      // 验证成功后直接注册
       const response = await AuthService.register({
         email: form.email,
         username: form.username,
@@ -139,21 +151,26 @@ const Register: React.FC = () => {
         confirmPassword: form.confirmPassword,
       });
 
+      // 存储用户ID
+      Taro.setStorageSync('userId', response.user.userId);
+
       // 获取用户信息并存储到全局store
       await fetchUserProfile();
 
       Taro.showToast({
-        title: '注册成功',
+        title: '注册成功！',
         icon: 'success',
         duration: 2000
       });
 
-      // 跳转到登录页面
+      // 注册成功后直接跳转到工作台
       setTimeout(() => {
-        Taro.redirectTo({ url: '/pages/login/index' });
+        Taro.reLaunch({ url: '/pages/workspace/index' });
       }, 2000);
+
     } catch (err) {
       setError(err instanceof Error ? err.message : '注册失败，请稍后重试');
+      setIsVerified(false);
     } finally {
       setLoading(false);
     }
@@ -164,26 +181,27 @@ const Register: React.FC = () => {
   };
 
   const goBackToForm = () => {
-    setVerificationStep('form');
+    setStep('form');
     setVerificationCode('');
     setError('');
-    setCountdown(0);
+    setIsVerified(false);
   };
 
-  // 邮箱验证步骤
-  if (verificationStep === 'verification') {
+  // 验证码输入步骤
+  if (step === 'verification') {
     return (
       <View className='register-container'>
         <View className='register-box'>
+          <View className='app-title'>表情包动起来</View>
           <View className='register-title'>邮箱验证</View>
-          
+
           <View className='verification-info'>
             <Text>验证码已发送至：{form.email}</Text>
           </View>
 
           <View className='form-item'>
             <Input
-              className='input'
+              className='input verification-input'
               type='text'
               placeholder='请输入6位验证码'
               value={verificationCode}
@@ -192,52 +210,31 @@ const Register: React.FC = () => {
             />
           </View>
 
-          {error && <Text className='error-text'>{error}</Text>}
-
-          <Button
-            className='register-button'
-            loading={loading}
-            onClick={handleVerifyCode}
-          >
-            验证
-          </Button>
-
-          <Button
-            className='secondary-button'
-            onClick={handleSendVerificationCode}
-            disabled={sendingCode || countdown > 0}
-          >
-            {countdown > 0 ? `${countdown}秒后重发` : '重新发送验证码'}
-          </Button>
-
-          <View className='back-link' onClick={goBackToForm}>
-            返回修改信息
-          </View>
-        </View>
-      </View>
-    );
-  }
-
-  // 验证成功后的注册步骤
-  if (verificationStep === 'verified') {
-    return (
-      <View className='register-container'>
-        <View className='register-box'>
-          <View className='register-title'>完成注册</View>
-          
-          <View className='verification-success'>
-            <Text>✓ 邮箱验证成功</Text>
-            <Text>请点击下方按钮完成注册</Text>
-          </View>
+          {countdown > 0 ? (
+            <View className='countdown-display'>
+              <Text className='countdown-text'>验证码将在 {Math.floor(countdown / 60)}:{String(countdown % 60).padStart(2, '0')} 后过期</Text>
+            </View>
+          ) : (
+            <View className='resend-section'>
+              <Text className='resend-hint'>没有收到验证码？</Text>
+              <Button
+                className='resend-link-button'
+                onClick={handleSendVerificationCode}
+                disabled={sendingCode}
+              >
+                {sendingCode ? '发送中...' : '重新发送'}
+              </Button>
+            </View>
+          )}
 
           {error && <Text className='error-text'>{error}</Text>}
 
           <Button
             className='register-button'
             loading={loading}
-            onClick={handleRegister}
+            onClick={handleVerifyAndRegister}
           >
-            完成注册
+            {isVerified ? '注册中...' : '验证并完成注册'}
           </Button>
 
           <View className='back-link' onClick={goBackToForm}>
@@ -252,8 +249,9 @@ const Register: React.FC = () => {
   return (
     <View className='register-container'>
       <View className='register-box'>
+        <View className='app-title'>表情包动起来</View>
         <View className='register-title'>注册</View>
-        
+
         <View className='form-item'>
           <Input
             className='input'
@@ -277,8 +275,9 @@ const Register: React.FC = () => {
         <View className='form-item'>
           <Input
             className='input'
-            type='password'
-            placeholder='请输入密码'
+            type='text'
+            password={true}
+            placeholder='请输入密码（至少8位）'
             value={form.password}
             onInput={e => handleInput('password', e.detail.value)}
           />
@@ -287,7 +286,8 @@ const Register: React.FC = () => {
         <View className='form-item'>
           <Input
             className='input'
-            type='password'
+            type='text'
+            password={true}
             placeholder='请确认密码'
             value={form.confirmPassword}
             onInput={e => handleInput('confirmPassword', e.detail.value)}
@@ -298,11 +298,10 @@ const Register: React.FC = () => {
 
         <Button
           className='register-button'
-          loading={loading}
+          loading={sendingCode}
           onClick={handleSendVerificationCode}
-          disabled={sendingCode || countdown > 0}
         >
-          {countdown > 0 ? `${countdown}秒后重发` : '发送验证码'}
+          发送验证码并注册
         </Button>
 
         <View className='login-link' onClick={goToLogin}>
