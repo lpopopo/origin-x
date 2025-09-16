@@ -174,7 +174,7 @@ export default function Workspace() {
   const [generateConfig, setGenerateConfig] = useState<GenerateConfig | null>(null)
   const [tabBarHeight, setTabBarHeight] = useState<number>(50) // tabBar高度
   const [inputOptions, setInputOptions] = useState<string[]>([]) // 输入选项
-  const [selectedStyle, setSelectedStyle] = useState<string>('default') // 选中的风格
+  const [selectedStyle, setSelectedStyle] = useState<string>('style-b') // 选中的风格，优先使用"动作的幅度更大"
   const [showStyleDropdown, setShowStyleDropdown] = useState<boolean>(false) // 是否显示风格下拦框
   // 作品预览弹窗状态
   const [previewModalVisible, setPreviewModalVisible] = useState(false)
@@ -335,26 +335,51 @@ export default function Workspace() {
   const loadGenerateConfig = async (): Promise<void> => {
     try {
       const config = await GenerateService.getGenerateConfig()
+
+      // 对风格选项进行排序，"动作的幅度更大"排在最前面
+      if (config.styles) {
+        const sortedStyles: Record<string, string> = {}
+        const entries = Object.entries(config.styles)
+
+        // 优先添加"动作的幅度更大"
+        const preferredEntry = entries.find(([label]) => label === '动作的幅度更大')
+        if (preferredEntry) {
+          sortedStyles[preferredEntry[0]] = preferredEntry[1]
+        }
+
+        // 添加其他选项
+        entries.forEach(([label, value]) => {
+          if (label !== '动作的幅度更大') {
+            sortedStyles[label] = value
+          }
+        })
+
+        config.styles = sortedStyles
+      }
+
       setGenerateConfig(config)
-      
-      // 如果当前没有选中的风格，自动选择第一个
+
+      // 优先选择"动作的幅度更大"作为默认选项
       if (config.styles && Object.keys(config.styles).length > 0) {
-        const firstStyleValue = Object.values(config.styles)[0]
-        if (selectedStyle === 'default' || !Object.values(config.styles).includes(selectedStyle)) {
-          setSelectedStyle(firstStyleValue)
+        const preferredStyleValue = config.styles['动作的幅度更大']
+        const defaultStyleValue = preferredStyleValue || Object.values(config.styles)[0]
+
+        if (selectedStyle === 'default' || selectedStyle === 'style-b' || !Object.values(config.styles).includes(selectedStyle)) {
+          setSelectedStyle(defaultStyleValue)
         }
       }
     } catch (error) {
       // 使用默认配置作为后备
       const fallbackConfig = {
         styles: {
-          '默认风格': 'default'
+          '动作的幅度更大': 'style-b',
+          '主体保持的更好': 'style-a'
         }
       }
       setGenerateConfig(fallbackConfig)
-      
-      // 设置默认选中第一个风格
-      setSelectedStyle('default')
+
+      // 设置默认选中"动作的幅度更大"
+      setSelectedStyle('style-b')
     }
   }
 
